@@ -7,13 +7,64 @@ using libtcod;
 
 namespace DarkRL
 {
+    class TileData
+    {
+        public TCODColor BackgroundColor { get; set; }
+
+        public bool IsWall { get; set; }
+
+        public TileData(TileData data)
+        {
+            BackgroundColor = data.BackgroundColor;
+            IsWall = data.IsWall;
+        }
+
+        public TileData()
+        {
+            BackgroundColor = Tile.DefaultBackgroundColor;
+            IsWall = false;
+        }
+    }
+
     class Tile
     {
         public static TCODColor DefaultBackgroundColor = TCODColor.darkerCyan;
 
-        public static Tile BlankTile = new Tile(null, 0);
+        public static TileData Blank = new TileData(){ BackgroundColor = DefaultBackgroundColor };
 
-        public TCODColor BackgroundColor { get; set; }
+        public static TileData Wall = new TileData() { BackgroundColor = TCODColor.grey, IsWall = true };
+
+        public static TileData Floor = new TileData() { BackgroundColor = TCODColor.lightGrey, IsWall = false };
+
+        public static Tile BlankTile = new Tile(null, 0, Blank);
+
+        public TCODColor BackgroundColor
+        {
+            get
+            {
+                return Data.BackgroundColor;
+            }
+            set
+            {
+                Data = new TileData(Data);
+                Data.BackgroundColor = value;
+            }
+        }
+
+        public bool IsWall
+        {
+            get
+            {
+                return Data.IsWall;
+            }
+            private set
+            {
+                Data = new TileData(Data);
+                Data.IsWall = value;
+            }
+        }
+
+        public TileData Data { get; set; }
 
         public int ID { get; private set; }
 
@@ -30,11 +81,11 @@ namespace DarkRL
 
         private Level level;
 
-        public Tile(Level l, int id)
+        public Tile(Level l, int id, TileData data)
         {
             ID = id;
             level = l;
-            BackgroundColor = Tile.DefaultBackgroundColor;
+            Data = new TileData(data);
         }
     }
 }

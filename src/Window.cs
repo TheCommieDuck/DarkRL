@@ -45,9 +45,6 @@ namespace DarkRL
         {
             libtcod.TCODConsole.initRoot(160, 80, "DarkRL", false, TCODRendererType.GLSL);
             console = TCODConsole.root;
-            console.setBackgroundColor(TCODColor.amber);
-            console.clear();
-            TCODConsole.flush();
             TCODConsole.checkForKeypress();
         }
 

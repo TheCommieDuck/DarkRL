@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="src\Camera.cs" />
+    <Compile Include="src\Direction.cs" />
     <Compile Include="src\Entity.cs" />
     <Compile Include="src\InputSystem.cs" />
     <Compile Include="src\Key.cs" />

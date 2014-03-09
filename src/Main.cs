@@ -14,6 +14,11 @@ namespace DarkRL
         private World world;
         private Camera camera;
 
+        public static T SelectRandomFromList<T>(List<T> items)
+        {
+            return items[TCODRandom.getInstance().getInt(0, items.Count - 1)];
+        }
+
         static void Main(string[] args)
         {
             DarkRL darkRL = new DarkRL();
@@ -28,6 +33,7 @@ namespace DarkRL
         {
             while (!window.IsClosed)
             {
+                window.Update();
                 Draw();
                 InputSystem.WaitForInput();
                 
@@ -57,8 +63,18 @@ namespace DarkRL
             window = new Window();
             window.Init();
             world = new World();
-            camera = new Camera(0, 0, window.Width, window.Height);
-            InputSystem.RegisterInputEvent(new Key('a'), () => camera.Move(1, 1));
+            camera = new Camera(40, 40, window.Width, window.Height);
+            InputSystem.RegisterInputEvent(new Key('h'), () => camera.Move(-1, 0));
+            InputSystem.RegisterInputEvent(new Key('a'), () => camera.Move(-1, 0));
+
+            InputSystem.RegisterInputEvent(new Key('j'), () => camera.Move(0, 1));
+            InputSystem.RegisterInputEvent(new Key('s'), () => camera.Move(0, 1));
+
+            InputSystem.RegisterInputEvent(new Key('w'), () => camera.Move(0, -1));
+            InputSystem.RegisterInputEvent(new Key('k'), () => camera.Move(0, -1));
+
+            InputSystem.RegisterInputEvent(new Key('l'), () => camera.Move(1, 0));
+            InputSystem.RegisterInputEvent(new Key('d'), () => camera.Move(1, 0));
         }
     }
 }
