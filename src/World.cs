@@ -31,9 +31,9 @@ namespace DarkRL
         public World()
         {
             Levels = new List<Level>();
-            Levels.Add(new Level(200, 200));
+            Levels.Add(new Level(300, 300));
             CurrentLevelIndex = 0;
-            CurrentLevel.GenerateLevel();
+            CurrentLevel.Generate();
         }
     }
 }

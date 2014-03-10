@@ -6,16 +6,13 @@ using System.Threading.Tasks;
 
 namespace DarkRL
 {
-    struct Point
+    class QuadTree
     {
-        public int X;
+        QuadTree nw, ne, sw, se;
 
-        public int Y;
-
-        public Point(int x, int y)
+        public QuadTree()
         {
-            X = x;
-            Y = y;
+            nw = ne = sw = se = null;
         }
     }
 }

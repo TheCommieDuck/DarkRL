@@ -18,6 +18,32 @@ namespace DarkRL
         East
     };
 
+    class Cell
+    {
+        public bool IsRoom = false;
+        public bool IsVisited = false;
+        public bool LeftWall = true;
+        public bool RightWall = true;
+        public bool TopWall = true;
+        public bool BottomWall = true;
+        public int Count
+        {
+            get
+            {
+                int count = 0;
+                if (!LeftWall)
+                    count++;
+                if (!RightWall)
+                    count++;
+                if (!TopWall)
+                    count++;
+                if (!BottomWall)
+                    count++;
+                return count;
+            }
+        }
+    };
+
     class Level
     {
 
@@ -77,8 +103,237 @@ namespace DarkRL
             RoomGenerators.Add(this.DigRectangularRoom);
             RoomGenerators.Add(this.DigRectangularRoom);
             RoomGenerators.Add(this.DigRectangularRoom);
-            RoomGenerators.Add(this.DigCorridor);
         }
+
+        public void Generate()
+        {
+
+            Cell[,] visited = new Cell[Width, Height];
+            List<Point> visitedIndices = new List<Point>();
+
+            TCODRandom random = TCODRandom.getInstance();
+
+            for (ushort x = 0; x < Width; ++x)
+            {
+                for (ushort y = 0; y < Height; ++y)
+                {
+                    //1. fill with walls.
+                    Tile tile = new Tile(this, (x << 16 | y), Tile.Wall);
+                    tileData[x, y] = tile;
+                    visited[x, y] = new Cell();
+                    if (TCODRandom.getInstance().getInt(0, 10) > 7)
+                    {
+                        //AddTileEntity(tile.ID, new Entity());
+                    }
+                }
+            }
+
+            //pick a random point, visit it
+            Point currentPoint = new Point(random.getInt(0, Width - 1), random.getInt(0, Height - 1));
+            visited[currentPoint.X, currentPoint.Y].IsVisited = true;
+            visitedIndices.Add(currentPoint);
+
+            while (visitedIndices.Count != Width * Height)
+            {
+                //go in a random direction
+                //while it returns false - i.e. we cannot move from here, then select a random visited point
+                int dir = RandomDirection(ref currentPoint, visited);
+                while (dir == -1)
+                {
+                    currentPoint = DarkRL.SelectRandomFromList(visitedIndices);
+                    dir = RandomDirection(ref currentPoint, visited);
+                }
+
+                visited[currentPoint.X, currentPoint.Y].IsVisited = true;
+                visitedIndices.Add(currentPoint);
+            }
+
+            int sparseness = 12;
+            for (int sparse = 0; sparse < sparseness; ++sparse)
+            {
+                for (ushort x = 0; x < Width; ++x)
+                {
+                    for (ushort y = 0; y < Height; ++y)
+                    {
+                        int count = 0;
+                        if (!visited[x, y].LeftWall)
+                            count++;
+                        if (!visited[x, y].RightWall)
+                            count++;
+                        if (!visited[x, y].TopWall)
+                            count++;
+                        if (!visited[x, y].BottomWall)
+                            count++;
+
+                        if (visited[x,y].Count == 1 )
+                        {
+                            //if it's the left wall empty
+                            if (!visited[x, y].LeftWall)
+                            {
+                                visited[x, y].LeftWall = true;
+                                visited[x - 1, y].RightWall = true;
+                            }
+                            else if (!visited[x, y].RightWall)
+                            {
+                                visited[x, y].RightWall = true;
+                                visited[x + 1, y].LeftWall = true;
+                            }
+                            else if (!visited[x, y].TopWall)
+                            {
+                                visited[x, y].TopWall = true;
+                                visited[x, y - 1].BottomWall = true;
+                            }
+                            else if (!visited[x, y].BottomWall)
+                            {
+                                visited[x, y].BottomWall = true;
+                                visited[x, y + 1].TopWall = true;
+                            }
+                            visited[x, y].IsVisited = false;
+                        }
+                    }
+                }
+            }
+
+            for (int x = 1; x < Width-1; ++x)
+            {
+                for (int y = 1; y < Height-1; ++y)
+                {
+                    int count = (visited[x - 1, y - 1].IsVisited ? 1 : 0) + (visited[x, y - 1].IsVisited ? 1 : 0) + (visited[x + 1, y - 1].IsVisited ? 1 : 0) +
+                        (visited[x, y - 1].IsVisited ? 1 : 0) + (visited[x, y].IsVisited ? 1 : 0) + (visited[x, y + 1].IsVisited ? 1 : 0) + 
+                        (visited[x + 1, y - 1].IsVisited ? 1 : 0) + (visited[x + 1, y].IsVisited ? 1 : 0) + (visited[x + 1, y + 1].IsVisited ? 1 : 0);
+                    if (visited[x, y].IsVisited || count > 7)
+                    {
+                        this[x, y].Data = Tile.Floor;
+                    }
+                    else
+                        this[x, y].Data = Tile.Wall;
+                }
+            }
+            //and now we can see about placing rooms. Just define them as a point (size)
+            /*List<Point> rooms = new List<Point>();
+            rooms.Add(new Point(20, 15));
+            rooms.Add(new Point(15, 25));
+            rooms.Add(new Point(15, 12));
+            rooms.Add(new Point(20, 17));
+            rooms.Add(new Point(10, 20));
+            rooms.Add(new Point(15, 21));
+            rooms.Add(new Point(15, 21));
+            rooms.Add(new Point(15, 21));
+            rooms.Add(new Point(15, 21));
+            rooms.Add(new Point(15, 21));
+
+            foreach (Point room in rooms)
+            {
+                int score = 10000000;
+                Point bestScorePoint = new Point(-1, -1);
+                for (int x = 1; x < Width - room.X - 1; ++x)
+                {
+                    for (int y = 1; y < Height - room.Y - 1; ++y)
+                    {
+                        int runningScore = 0;
+                        //now iterate every cell of the room, which is (roomX+x, roomY+y)
+                        for (int roomX = 0; roomX < room.X; ++roomX)
+                        {
+                            for (int roomY = 0; roomY < room.Y; ++roomY)
+                            {
+                                Cell left = visited[roomX + x - 1, roomY + y];
+                                Cell right = visited[roomX + x + 1, roomY + y];
+                                Cell top = visited[roomX + x, roomY + y - 1];
+                                Cell bottom = visited[roomX + x - 1, roomY + y + 1];
+
+                                if (left.IsVisited)
+                                    runningScore++;
+                                if (right.IsVisited)
+                                    runningScore++;
+                                if (top.IsVisited)
+                                    runningScore++;
+                                if (bottom.IsVisited)
+                                    runningScore++;
+
+                                if (visited[roomX + x, roomY + y].IsRoom)
+                                    runningScore += 100;
+                                else if (visited[roomX + x, roomY + y].IsVisited)
+                                    runningScore += 3;
+                            }
+                        }
+                        if (runningScore < score)
+                        {
+                            score = runningScore;
+                            bestScorePoint = new Point(x, y);
+                        }
+                    }
+                }
+                for (int x = 0; x < room.X; ++x)
+                {
+                    for (int y = 0; y < room.Y; ++y)
+                    {
+                        if (x != 0 && y != 0 && x != room.X - 1 && y != room.Y - 1)
+                        {
+                            visited[x + bestScorePoint.X, y + bestScorePoint.Y].IsRoom = true;
+                            visited[x + bestScorePoint.X, y + bestScorePoint.Y].IsVisited = true;
+                        }
+                    }
+                }
+            }*/
+        }
+
+        public int RandomDirection(ref Point curr, Cell[,] visited)
+        {
+            Point newCurr;
+            HashSet<int> triedDirs = new HashSet<int>();
+            int dir;
+            do
+            {
+                newCurr = new Point(curr.X, curr.Y);
+                dir = TCODRandom.getInstance().getInt(0, 3);
+                triedDirs.Add(dir);
+                if (triedDirs.Count == 4) //out of directions
+                    return -1;
+                switch (dir)
+                {
+                    case 1:
+                        newCurr.Y += 1;
+                        break;
+                    case 2: //u
+                        newCurr.Y -= 1;
+                        break;
+                    case 3: //r
+                        newCurr.X += 1;
+                        break;
+                    case 0: //l
+                        newCurr.X -= 1;
+                        break;
+                }
+            } while (newCurr.X < 0 || newCurr.Y < 0 || newCurr.X >= Width || newCurr.Y >= Height || visited[newCurr.X, newCurr.Y].IsVisited);
+
+            if (dir == 0)
+            {
+                visited[curr.X, curr.Y].LeftWall = false;
+                visited[newCurr.X, newCurr.Y].RightWall = false;
+            }
+            else if (dir == 1)
+            {
+                visited[curr.X, curr.Y].BottomWall = false;
+                visited[newCurr.X, newCurr.Y].TopWall = false;
+            }
+            else if (dir == 2)
+            {
+                visited[curr.X, curr.Y].TopWall = false;
+                visited[newCurr.X, newCurr.Y].BottomWall = false;
+            }
+            else if (dir == 3)
+            {
+                visited[curr.X, curr.Y].RightWall = false;
+                visited[newCurr.X, newCurr.Y].LeftWall = false;
+            }
+            curr = newCurr;
+            return dir;
+        }
+
+
+
+
+
 
         public void GenerateLevel()
         {
@@ -224,8 +479,8 @@ namespace DarkRL
 
         private bool DigRectangularRoom(int x, int y, Direction direction)
         {
-            int width = 10;
-            int height = 10; 
+            int width = 30;
+            int height = 30; 
             //first convert from our centre point to our topleft/right
             CentralToTopLeft(ref x, ref y, width, height, direction);
 
@@ -241,11 +496,9 @@ namespace DarkRL
             return true;
         }
 
-
-
         private bool DigCorridor(int x, int y, Direction direction)
         {
-            int length = 10; //TODO: random sizes, maybe make it go up and down
+            int length = TCODRandom.getInstance().getInt(5, 30); //TODO: random sizes, maybe make it go up and down
             switch (direction)
             {
                 case Direction.North:

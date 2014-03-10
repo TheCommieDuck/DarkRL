@@ -43,7 +43,7 @@ namespace DarkRL
         //Initialisation logic
         public void Init()
         {
-            libtcod.TCODConsole.initRoot(160, 80, "DarkRL", false, TCODRendererType.GLSL);
+            libtcod.TCODConsole.initRoot(40, 20, "DarkRL", false, TCODRendererType.GLSL);
             console = TCODConsole.root;
             TCODConsole.checkForKeypress();
         }
