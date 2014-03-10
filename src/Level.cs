@@ -20,7 +20,6 @@ namespace DarkRL
 
     class Cell
     {
-        public bool IsRoom = false;
         public bool IsVisited = false;
         public bool LeftWall = true;
         public bool RightWall = true;
@@ -31,18 +30,104 @@ namespace DarkRL
             get
             {
                 int count = 0;
-                if (!LeftWall)
+                if (LeftWall)
                     count++;
-                if (!RightWall)
+                if (RightWall)
                     count++;
-                if (!TopWall)
+                if (TopWall)
                     count++;
-                if (!BottomWall)
+                if (BottomWall)
                     count++;
                 return count;
             }
         }
-    };
+        public bool IsDeadEnd
+        {
+            get
+            {
+                return Count == 3;
+            }
+        }
+
+        public Direction DeadEndDirection
+        {
+            get
+            {
+                if (!IsDeadEnd)
+                    throw new InvalidOperationException();
+
+                if (!TopWall)
+                    return Direction.North;
+                if (!BottomWall)
+                    return Direction.South;
+                if (!LeftWall)
+                    return Direction.West;
+                if (!RightWall)
+                    return Direction.East;
+
+                throw new InvalidOperationException();
+            }
+        }
+
+        public bool IsCorridor
+        {
+            get
+            {
+                return Count < 4 && IsVisited;
+            }
+        }
+
+        public bool IsRoom
+        {
+            get
+            {
+                return Count < 4 && !IsVisited;
+            }
+        }
+    }
+
+    public class DirectionPicker
+    {
+        private readonly List<Direction> directionsPicked = new List<Direction>();
+        private Direction previous;
+        private int changeMod;
+
+        public bool HasNextDirection
+        {
+            get { return directionsPicked.Count < 4; }
+        }
+
+        public DirectionPicker(Direction prev, int change)
+        {
+            previous = prev;
+            changeMod = change;
+        }
+
+        public Direction GetNextDirection()
+        {
+            if(!HasNextDirection) 
+                throw new InvalidOperationException("No directions available");
+
+            Direction directionPicked;
+
+            do
+            {
+                directionPicked = MustChangeDirection ? (Direction)TCODRandom.getInstance().getInt(0, 3) : previous;
+            } while (directionsPicked.Contains(directionPicked));
+
+            directionsPicked.Add(directionPicked);
+
+            return directionPicked;
+        }
+
+        public bool MustChangeDirection
+        {
+            get
+            {
+                return (directionsPicked.Count > 0) || changeMod > TCODRandom.getInstance().getInt(0, 99);
+            }
+        }
+    }
 
     class Level
     {
@@ -129,7 +214,51 @@ namespace DarkRL
             }
 
             //pick a random point, visit it
-            Point currentPoint = new Point(random.getInt(0, Width - 1), random.getInt(0, Height - 1));
+            Point currentPoint = PickRandomPointToVisit(visited);
+            MarkVisited(currentPoint, visited, visitedIndices);
+            Direction previous = Direction.North;
+            //visit all the others
+            while (visitedIndices.Count != Width * Height)
+            {
+                DirectionPicker directionPicker = new DirectionPicker(previous, 30);
+                Direction dir = directionPicker.GetNextDirection();
+
+                while (!HasAdjacentCellInDirection(currentPoint, dir) || IsAdjacentCellVisited(currentPoint, dir, visited))
+                {
+                    if (directionPicker.HasNextDirection)
+
+                        dir = directionPicker.GetNextDirection();
+                    else
+                    {
+                        currentPoint = DarkRL.SelectRandomFromList(visitedIndices);
+                        directionPicker = new DirectionPicker(previous, 30);
+                        dir = directionPicker.GetNextDirection();
+                    }
+                }
+
+                currentPoint = CreateCorridor(currentPoint, dir, visited);
+                MarkVisited(currentPoint, visited, visitedIndices);
+                previous = dir;
+            }
+
+            Sparsify(visited, 70);
+            RemoveDeadEnds(visited, 100);
+
+            PlaceRooms(10, 10, 40, 10, 40, visited);
+            for (int x = 0; x < Width; ++x)
+            {
+                for (int y = 0; y < Height; ++y)
+                {
+                    if (visited[x, y].Count == 4)
+                        this[x, y].Data = Tile.Floor;
+                    if (visited[x, y].IsRoom)
+                        this[x, y].BackgroundColor = TCODColor.grey;
+                }
+            }
+            int i = 5;
+            int j = 6;
+            #region old
+            /*Point currentPoint = new Point(random.getInt(0, Width - 1), random.getInt(0, Height - 1));
             visited[currentPoint.X, currentPoint.Y].IsVisited = true;
             visitedIndices.Add(currentPoint);
 
@@ -137,18 +266,18 @@ namespace DarkRL
             {
                 //go in a random direction
                 //while it returns false - i.e. we cannot move from here, then select a random visited point
-                int dir = RandomDirection(ref currentPoint, visited);
+                int dir = RandomDirection(ref currentPoint, visited, -1);
                 while (dir == -1)
                 {
                     currentPoint = DarkRL.SelectRandomFromList(visitedIndices);
-                    dir = RandomDirection(ref currentPoint, visited);
+                    dir = RandomDirection(ref currentPoint, visited, dir);
                 }
 
                 visited[currentPoint.X, currentPoint.Y].IsVisited = true;
                 visitedIndices.Add(currentPoint);
             }
 
-            int sparseness = 12;
+            int sparseness = 20;
             for (int sparse = 0; sparse < sparseness; ++sparse)
             {
                 for (ushort x = 0; x < Width; ++x)
@@ -198,19 +327,23 @@ namespace DarkRL
             {
                 for (int y = 1; y < Height-1; ++y)
                 {
-                    int count = (visited[x - 1, y - 1].IsVisited ? 1 : 0) + (visited[x, y - 1].IsVisited ? 1 : 0) + (visited[x + 1, y - 1].IsVisited ? 1 : 0) +
-                        (visited[x, y - 1].IsVisited ? 1 : 0) + (visited[x, y].IsVisited ? 1 : 0) + (visited[x, y + 1].IsVisited ? 1 : 0) + 
-                        (visited[x + 1, y - 1].IsVisited ? 1 : 0) + (visited[x + 1, y].IsVisited ? 1 : 0) + (visited[x + 1, y + 1].IsVisited ? 1 : 0);
-                    if (visited[x, y].IsVisited || count > 7)
+                    if (visited[x, y].IsVisited || visited[x, y].Count == 1 )
                     {
                         this[x, y].Data = Tile.Floor;
+                        this[x - 1, y].Data = Tile.Floor;
+                        this[x + 1, y].Data = Tile.Floor;
+                        this[x, y - 1].Data = Tile.Floor;
+                        this[x, y + 1].Data = Tile.Floor;
                     }
                     else
-                        this[x, y].Data = Tile.Wall;
+                    {
+                        if(this[x,y].Data != Tile.Floor)
+                            this[x, y].Data = Tile.Wall;
+                    }
                 }
             }
             //and now we can see about placing rooms. Just define them as a point (size)
-            /*List<Point> rooms = new List<Point>();
+            List<Point> rooms = new List<Point>();
             rooms.Add(new Point(20, 15));
             rooms.Add(new Point(15, 25));
             rooms.Add(new Point(15, 12));
@@ -275,9 +408,279 @@ namespace DarkRL
                     }
                 }
             }*/
+            #endregion
         }
 
-        public int RandomDirection(ref Point curr, Cell[,] visited)
+        private int CalculateRoomScore(Point location, Point room, Cell[,] visited)
+        {
+            int score = 0;
+            for (int x = 0; x < room.X; ++x)
+            {
+                for (int y = 0; y < room.Y; ++y)
+                {
+                    Point dungeonLocation = new Point(location.X + x, location.Y + y);
+                    if(dungeonLocation.X >= Width-1 || dungeonLocation.Y >= Height-1 || dungeonLocation.X == 0 || dungeonLocation.Y == 0)
+                        return Int32.MaxValue;
+                            // Add 1 point for each adjacent corridor to the cell
+                    if (AdjacentCellInDirectionIsCorridor(dungeonLocation, Direction.North, visited))
+                        score++;
+                    if (AdjacentCellInDirectionIsCorridor(dungeonLocation, Direction.South, visited))
+                        score++;
+                    if (AdjacentCellInDirectionIsCorridor(dungeonLocation, Direction.West, visited)) 
+                        score++;
+                    if (AdjacentCellInDirectionIsCorridor(dungeonLocation, Direction.East, visited))
+                        score++; 
+                    // Add 3 points if the cell overlaps an existing corridor
+                    if (visited[dungeonLocation.X, dungeonLocation.Y].IsCorridor) 
+                        score += 3;
+                    if(visited[dungeonLocation.X, dungeonLocation.Y].IsRoom)
+                        score += 100;
+                }
+            }
+            return score;
+        }
+
+        public bool AdjacentCellInDirectionIsCorridor(Point point, Direction direction, Cell[,] visited)
+        {
+            Point adj = GetTargetLocation(point, direction);
+            return visited[adj.X, adj.Y].IsCorridor;
+        }
+
+        public void PlaceRooms(int count, int minWidth, int maxWidth, int minHeight, int maxHeight, Cell[,] visited)
+        {
+            for (int i = 0; i < count; ++i)
+            {
+                int bestScore = Int32.MaxValue;
+                int oldScore = Int32.MaxValue;
+                Point bestPoint = new Point(-1, -1);
+                Point room = CreateRoom(minWidth, maxWidth, minHeight, maxHeight);
+                List<Point> attempts = new List<Point>();
+                //try some points
+                for(int tries = 0; tries < Math.Min(Width*Height, 1000); ++tries)
+                    attempts.Add(new Point(TCODRandom.getInstance().getInt(0, Width - room.X), TCODRandom.getInstance().getInt(0, Height - room.Y)));
+                foreach (Point tryPoint in attempts)
+                {
+                    bestScore = Math.Min(CalculateRoomScore(tryPoint, room, visited), bestScore);
+                    if (bestScore != oldScore)
+                    {
+                        oldScore = bestScore;
+                        bestPoint = tryPoint;
+                    }
+                }
+                PlaceRoom(bestPoint, room, visited);
+            }
+        }
+
+        public void PlaceRoom(Point location, Point room, Cell[,] visited)
+        {
+            for (int x = 0; x < room.X; ++x)
+            {
+                for (int y = 0; y < room.Y; ++y)
+                {
+                    if (x != 0 && y != 0 && y != room.Y - 1 && x != room.X - 1)
+                    {
+                        visited[location.X + x, location.Y + y].IsVisited = false;
+                        visited[location.X + x, location.Y + y].TopWall = false;
+                        visited[location.X + x, location.Y + y].LeftWall = false;
+                        visited[location.X + x, location.Y + y].RightWall = false;
+                        visited[location.X + x, location.Y + y].BottomWall = false;
+                    }
+                    else
+                    {
+                        visited[location.X + x, location.Y + y].TopWall = true;
+                        visited[location.X + x, location.Y + y].LeftWall = true;
+                        visited[location.X + x, location.Y + y].RightWall = true;
+                        visited[location.X + x, location.Y + y].BottomWall = true;
+                    }
+                }
+            }
+        }
+
+        public Point CreateRoom(int minRoomWidth, int maxRoomWidth, int minRoomHeight, int maxRoomHeight)
+        {
+            return new Point(TCODRandom.getInstance().getInt(minRoomWidth, maxRoomWidth), TCODRandom.getInstance().getInt(minRoomHeight, maxRoomHeight));
+        }
+
+        private bool ShouldRemoveDeadEnd(int removeFactor)
+        {
+            return removeFactor > TCODRandom.getInstance().getInt(0, 99);
+        }
+
+        private void RemoveDeadEnds(Cell[,] visited, int removalModifier)
+        {
+            foreach (Point p in DeadEndLocations(visited))
+            {
+                if (ShouldRemoveDeadEnd(removalModifier))
+                {
+                    Point current = p;
+                    do
+                    {
+                        DirectionPicker dirPicker = new DirectionPicker(visited[current.X, current.Y].DeadEndDirection, 100);
+                        Direction direction = dirPicker.GetNextDirection();
+                        while(!HasAdjacentCellInDirection(current, direction))
+                        {
+                            if(dirPicker.HasNextDirection)
+                            {
+                                direction = dirPicker.GetNextDirection();
+                            }
+                            else
+                            {
+                                throw new Exception();
+                            }
+                        }
+                        current = CreateCorridor(current, direction, visited);
+                    }while(visited[current.X,current.Y].IsDeadEnd);
+                }
+            }
+        }
+
+        private void Sparsify(Cell[,] visited, int sparseness)
+        {
+            int cellsToRemove = (int)Math.Ceiling(((float)sparseness / 100) * Width * Height);
+            IEnumerator<Point> enumerator = DeadEndLocations(visited).GetEnumerator();
+
+            for(int i = 0; i < cellsToRemove; ++i)
+            {
+                if (!enumerator.MoveNext()) //check for more
+                {
+                    enumerator = DeadEndLocations(visited).GetEnumerator();
+                    if (!enumerator.MoveNext())
+                        break; //nomore
+
+                }
+                Point p = enumerator.Current;
+                CreateSide(p, visited[p.X, p.Y].DeadEndDirection, visited, true);
+            }
+        }
+
+        private void MarkVisited(Point p, Cell[,] visited, List<Point> indices)
+        {
+            visited[p.X, p.Y].IsVisited = true;
+            indices.Add(p);
+        }
+
+        public IEnumerable<Point> DeadEndLocations(Cell[,] visited)
+        {
+            for (int x = 0; x < Width; ++x)
+            {
+                for (int y = 0; y < Height; ++y)
+                {
+                    if (visited[x, y].IsDeadEnd)
+                        yield return new Point(x, y);
+                }
+            }
+        }
+
+        public Point PickRandomPointToVisit(Cell[,] visited)
+        {
+            Point p = new Point(TCODRandom.getInstance().getInt(0, Width - 1), TCODRandom.getInstance().getInt(0, Height - 1));
+            visited[p.X, p.Y].IsVisited = true;
+            return p;
+        }
+
+        public bool HasAdjacentCellInDirection(Point location, Direction direction)
+        {
+            // Check that the location falls within the bounds of the map
+            if ((location.X < 0) || (location.X >= Width) || (location.Y < 0) || (location.Y >= Height)) return false;
+
+            // Check if there is an adjacent cell in the direction
+            switch(direction)
+            {
+                case Direction.North:
+                    return location.Y > 0;
+                case Direction.South:
+                    return location.Y < (Height-1);
+                case Direction.West:
+                    return location.X > 0;
+                case Direction.East:
+                    return location.X < (Width-1);
+                default:
+                    return false;
+            }
+        }
+
+        public bool IsAdjacentCellVisited(Point location, Direction direction, Cell[,] visited)
+        {
+            if (!HasAdjacentCellInDirection(location, direction)) 
+                throw new InvalidOperationException("No adjacent cell exists for the location and direction provided.");
+
+            switch(direction)
+            {
+                case Direction.North:
+                    return visited[location.X, location.Y - 1].IsVisited;
+                case Direction.West:
+                    return visited[location.X - 1, location.Y].IsVisited;
+                case Direction.South:
+                    return visited[location.X, location.Y + 1].IsVisited;
+                case Direction.East:
+                    return visited[location.X + 1, location.Y].IsVisited;
+                default:
+                    throw new InvalidOperationException();
+
+            }
+        }
+
+        public Point CreateCorridor(Point location, Direction direction, Cell[,] visited)
+        {
+            return CreateSide(location, direction, visited);
+        }
+
+        public Point CreateSide(Point location, Direction direction, Cell[,] visited, bool isBecomingWall=false)
+        {
+
+            if (!HasAdjacentCellInDirection(location, direction)) 
+                throw new InvalidOperationException("No adjacent cell exists for the location and direction provided.");
+
+            Point target = GetTargetLocation(location, direction);
+
+            switch(direction)
+            {
+                case Direction.North:
+                    visited[location.X, location.Y].TopWall = isBecomingWall;
+                    visited[location.X, location.Y - 1].BottomWall = isBecomingWall;
+                    break;
+
+                case Direction.South:
+                    visited[location.X, location.Y].BottomWall = isBecomingWall;
+                    visited[location.X, location.Y + 1].TopWall = isBecomingWall;
+                    break;
+
+                case Direction.West:
+                    visited[location.X, location.Y].LeftWall = isBecomingWall;
+                    visited[location.X - 1, location.Y].RightWall = isBecomingWall;
+                    break;
+
+                case Direction.East:
+                    visited[location.X, location.Y].RightWall = isBecomingWall;
+                    visited[location.X + 1, location.Y].LeftWall = isBecomingWall;
+                    break;
+            }
+
+            return target;
+        }
+
+        private Point GetTargetLocation(Point location, Direction direction)
+        {
+
+            if (!HasAdjacentCellInDirection(location, direction)) 
+                throw new InvalidOperationException("No adjacent cell exists for the location and direction provided.");
+
+            switch (direction)
+            {
+                case Direction.North:
+                    return new Point(location.X, location.Y - 1);
+                case Direction.West:
+                    return new Point(location.X - 1, location.Y);
+                case Direction.South:
+                    return new Point(location.X, location.Y + 1);
+                case Direction.East:
+                    return new Point(location.X + 1, location.Y);
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        public int RandomDirection(ref Point curr, Cell[,] visited, int oldDir)
         {
             Point newCurr;
             HashSet<int> triedDirs = new HashSet<int>();
@@ -285,7 +688,10 @@ namespace DarkRL
             do
             {
                 newCurr = new Point(curr.X, curr.Y);
-                dir = TCODRandom.getInstance().getInt(0, 3);
+                if (oldDir != -1 && TCODRandom.getInstance().getInt(0, 100) > 70)
+                    dir = oldDir;
+                else
+                    dir = TCODRandom.getInstance().getInt(0, 3);
                 triedDirs.Add(dir);
                 if (triedDirs.Count == 4) //out of directions
                     return -1;
