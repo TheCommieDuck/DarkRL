@@ -28,13 +28,15 @@ namespace DarkRL
 
     class Tile
     {
-        public static TCODColor DefaultBackgroundColor = TCODColor.darkerCyan;
+        public static TCODColor DefaultBackgroundColor = TCODColor.darkerGrey;
 
         public static TileData Blank = new TileData(){ BackgroundColor = DefaultBackgroundColor };
 
-        public static TileData Wall = new TileData() { BackgroundColor = TCODColor.black, IsWall = true };
+        public static TileData Floor = new TileData() { BackgroundColor = TCODColor.darkestGrey, IsWall = false };
 
-        public static TileData Floor = new TileData() { BackgroundColor = TCODColor.white, IsWall = false };
+        public static TileData Door = new TileData() { BackgroundColor = TCODColor.gold, IsWall = true };
+
+        public static TileData Wall = new TileData() { BackgroundColor = TCODColor.grey, IsWall = true };
 
         public static Tile BlankTile = new Tile(null, 0, Blank);
 
