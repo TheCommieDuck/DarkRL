@@ -234,18 +234,106 @@ namespace DarkRL
             RemoveDeadEnds(100);
 
             PlaceRooms(Width * Height / 700, 7, 20, 7, 20);
-            for (int x = 0; x < Width; ++x)
+
+            //and cleanup
+            Cleanup(1, 60, 7);
+            Cleanup(1, 50, 0);
+        }
+
+        private void Cleanup(int times, int threeSpace, int twoSpace)
+        {
+            for (int i = 0; i < times; ++i)
             {
-                for (int y = 0; y < Height; ++y)
+                //and a final try and sort out those disgusting dead ends within our finishing function - if it's got 3 wall neighbours, then just make it a wall
+                for (int x = 0; x < Width; ++x)
                 {
-                    if (visited[x, y].Count == 4)
-                        level[x, y].Data = Tile.Floor;
-                    if (visited[x, y].IsRoom)
-                        level[x, y].BackgroundColor = TCODColor.grey;
-                    if (visited[x, y].IsDoor)
-                        level[x, y].Data = Tile.Door;
+                    for (int y = 0; y < Height; ++y)
+                    {
+
+                        if (visited[x, y].Count == 4)
+                        {
+                            if (NumAdjacentSpaces(x, y) == 4 ||
+                                (NumAdjacentSpaces(x, y) == 3 && !HasAdjacentDoor(x, y) && (TCODRandom.getInstance().getInt(0, 100) < threeSpace))
+                                || (NumAdjacentSpaces(x, y) == 2 && !HasAdjacentDoor(x, y) && (TCODRandom.getInstance().getInt(0, 100) < twoSpace))
+                                )
+                            {
+                                level[x + 1, y + 1].Data = Tile.Floor;
+                                visited[x, y].LeftWall = false;
+                                visited[x, y].TopWall = false;
+                                visited[x, y].RightWall = false;
+                                visited[x, y].BottomWall = false;
+                            }
+                            else
+                                level[x + 1, y + 1].Data = Tile.Wall;
+
+                        }
+
+                        else if (Has3AdjacentWalls(x, y) && !HasAdjacentDoor(x, y))
+                        {
+                            level[x + 1, y + 1].Data = Tile.Wall;
+                            visited[x, y].LeftWall = true;
+                            visited[x, y].TopWall = true;
+                            visited[x, y].RightWall = true;
+                            visited[x, y].BottomWall = true;
+                        }
+                        else
+                            level[x + 1, y + 1].Data = Tile.Floor;
+
+                        //special
+                        if (visited[x, y].IsRoom)
+                            level[x + 1, y + 1].BackgroundColor = TCODColor.darkGrey;
+                        if (visited[x, y].IsDoor)
+                            level[x + 1, y + 1].Data = Tile.Door;
+                    }
                 }
             }
+        }
+
+        private bool HasAdjacentDoor(int x, int y)
+        {
+            if ((x == 0) || (x == Width - 1) || (y == 0) || (y == Height - 1))
+                return false;
+            if (visited[x - 1, y].IsDoor)
+                return true;
+            if (visited[x + 1, y].IsDoor)
+                return true;
+            if (visited[x, y - 1].IsDoor)
+                return true;
+            if (visited[x, y + 1].IsDoor)
+                return true;
+            return false;
+        }
+
+        private bool Has3AdjacentWalls(int x, int y)
+        {
+            if ((x == 0) || (x == Width-1) || (y == 0) || (y == Height-1)) 
+                return false;
+            int cnt = 0;
+            if (!visited[x - 1, y].IsDoor && visited[x - 1, y].Count == 4)
+                cnt++;
+            if (!visited[x + 1, y].IsDoor && visited[x + 1, y].Count == 4)
+                cnt++;
+            if (!visited[x, y - 1].IsDoor && visited[x, y - 1].Count == 4)
+                cnt++;
+            if (!visited[x, y + 1].IsDoor && visited[x, y + 1].Count == 4)
+                cnt++;
+            return cnt >= 3;
+        }
+
+        private int NumAdjacentSpaces(int x, int y)
+        {
+            if ((x == 0) || (x == Width - 1) || (y == 0) || (y == Height - 1))
+                return 0;
+            int cnt = 0;
+            if (!visited[x - 1, y].IsDoor && visited[x - 1, y].Count != 4)
+                cnt++;
+            if (!visited[x + 1, y].IsDoor && visited[x + 1, y].Count != 4)
+                cnt++;
+            if (!visited[x, y - 1].IsDoor && visited[x, y - 1].Count != 4)
+                cnt++;
+            if (!visited[x, y + 1].IsDoor && visited[x, y + 1].Count != 4)
+                cnt++;
+            return cnt;
         }
 
         //pick a random point, mark it visited
