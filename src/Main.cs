@@ -10,9 +10,11 @@ namespace DarkRL
 {
     class DarkRL
     {
+        public static TCODRandom Random = TCODRandom.getInstance();
         private Window window;
         private World world;
         private Camera camera;
+        private int guiHeight = 4;
 
         public static T SelectRandomFromList<T>(List<T> items)
         {
@@ -33,27 +35,21 @@ namespace DarkRL
         {
             while (!window.IsClosed)
             {
-                window.Update();
-                Draw();
                 InputSystem.WaitForInput();
-                
+                world.CurrentLevel.Update();
+                window.Update();
+                camera.Update();
+                Draw();
             }
         }
 
         public void Draw()
         {
             window.Clear();
-            for (int x = camera.Left; x < camera.Right; ++x)
+            world.CurrentLevel.Draw(window, camera);
+            for (int y = camera.Bottom; y < guiHeight + camera.Bottom; ++y)
             {
-                for (int y = camera.Top; y < camera.Bottom; ++y)
-                {
-                    int windowX = x - camera.Left;
-                    int windowY = y - camera.Top;
-                    if(world[x,y].VisibleEntity == null)
-                        window.Draw(world[x, y].BackgroundColor, windowX, windowY);
-                    else
-                        window.Draw(world[x, y].BackgroundColor, world[x, y].VisibleEntity.Color, world[x, y].VisibleEntity.Character, windowX, windowY);
-                }
+
             }
             window.Update();
         }
@@ -63,18 +59,25 @@ namespace DarkRL
             window = new Window();
             window.Init();
             world = new World();
-            camera = new Camera(0, 0, window.Width, window.Height);
-            InputSystem.RegisterInputEvent(new Key('h'), () => camera.Move(-1, 0));
-            InputSystem.RegisterInputEvent(new Key('a'), () => camera.Move(-1, 0));
 
-            InputSystem.RegisterInputEvent(new Key('j'), () => camera.Move(0, 1));
-            InputSystem.RegisterInputEvent(new Key('s'), () => camera.Move(0, 1));
+            camera = new Camera(0, 0, window.Width, window.Height-guiHeight);
+            camera.CentreOn(world.CurrentLevel.Player.Position);
+            Entity player = world.CurrentLevel.Player;
+            camera.SetFocus(player);
+            InputSystem.RegisterInputEvent(new Key('h'), () => player.Move(-1, 0));
+            InputSystem.RegisterInputEvent(new Key('a'), () => player.Move(-1, 0));
 
-            InputSystem.RegisterInputEvent(new Key('w'), () => camera.Move(0, -1));
-            InputSystem.RegisterInputEvent(new Key('k'), () => camera.Move(0, -1));
+            InputSystem.RegisterInputEvent(new Key('j'), () => player.Move(0, 1));
+            InputSystem.RegisterInputEvent(new Key('s'), () => player.Move(0, 1));
 
-            InputSystem.RegisterInputEvent(new Key('l'), () => camera.Move(1, 0));
-            InputSystem.RegisterInputEvent(new Key('d'), () => camera.Move(1, 0));
+            InputSystem.RegisterInputEvent(new Key('w'), () => player.Move(0, -1));
+            InputSystem.RegisterInputEvent(new Key('k'), () => player.Move(0, -1));
+
+            InputSystem.RegisterInputEvent(new Key('l'), () => player.Move(1, 0));
+            InputSystem.RegisterInputEvent(new Key('d'), () => player.Move(1, 0));
+
+            window.Update();
+            Draw();
         }
     }
 }

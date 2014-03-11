@@ -236,8 +236,8 @@ namespace DarkRL
             PlaceRooms(Width * Height / 700, 7, 20, 7, 20);
 
             //and cleanup
-            Cleanup(1, 60, 7);
-            Cleanup(1, 50, 0);
+            Cleanup(1, 60, 12);
+            Cleanup(1, 50, 5);
         }
 
         private void Cleanup(int times, int threeSpace, int twoSpace)
@@ -249,7 +249,6 @@ namespace DarkRL
                 {
                     for (int y = 0; y < Height; ++y)
                     {
-
                         if (visited[x, y].Count == 4)
                         {
                             if (NumAdjacentSpaces(x, y) == 4 ||
@@ -281,7 +280,10 @@ namespace DarkRL
 
                         //special
                         if (visited[x, y].IsRoom)
-                            level[x + 1, y + 1].BackgroundColor = TCODColor.darkGrey;
+                        {
+                            level[x + 1, y + 1].Data = Tile.Floor;
+                        }
+
                         if (visited[x, y].IsDoor)
                             level[x + 1, y + 1].Data = Tile.Door;
                     }

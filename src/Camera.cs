@@ -9,6 +9,8 @@ namespace DarkRL
 {
     class Camera
     {
+        private Entity focus;
+
         public Rectangle Viewport { get; private set; }
 
         public int Left
@@ -46,6 +48,26 @@ namespace DarkRL
         public Camera(int topX, int topY, int width, int height)
         {
             Viewport = new Rectangle(topX, topY, width, height);
+            focus = null;
+        }
+
+        public Camera(Point point, int width, int height)
+            : this(point.X, point.Y, width, height) { }
+
+        public void Update()
+        {
+            if(focus != null)
+                this.CentreOn(focus.Position);
+        }
+
+        public void SetFocus(Entity focusPoint)
+        {
+            focus = focusPoint;
+        }
+
+        public void CentreOn(Point point)
+        {
+            this.SetPosition(point.X - Viewport.Width / 2, point.Y - Viewport.Height / 2);
         }
 
         public void Move(int xOffset, int yOffset)

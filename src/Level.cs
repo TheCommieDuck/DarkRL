@@ -17,9 +17,23 @@ namespace DarkRL
 
         private Tile[,] tileData;
 
-        private Dictionary<int, List<Entity>> entities = new Dictionary<int, List<Entity>>();
+        private TCODMap lightingMap;
 
-        private static List<Entity> EmptyEntityList = new List<Entity>();
+        private bool doesLightingNeedUpdate = true;
+
+        private Dictionary<int, List<int>> entitiesOnTile = new Dictionary<int, List<int>>();
+
+        private Dictionary<int, Entity> entityDict = new Dictionary<int, Entity>();
+
+        private static List<int> EmptyEntityList = new List<int>();
+
+        public Entity Player
+        {
+            get
+            {
+                return GetEntity(0);
+            }
+        }
 
         public Tile this[int x, int y]
         {
@@ -32,25 +46,78 @@ namespace DarkRL
             }
         }
 
+        public Tile this[Point point]
+        {
+            get
+            {
+                return this[point.X, point.Y];
+            }
+        }
+
         public Entity GetVisibleEntity(int tileID)
         {
-            return GetEntities(tileID).OrderByDescending(t => t.ViewPriority).FirstOrDefault();
+            List<int> entitiesOnTile = GetEntities(tileID);
+            Entity visEntity = null;
+            foreach (int e in entitiesOnTile)
+            {
+                Entity curr = GetEntity(e);
+                if (visEntity == null || curr.ViewPriority > visEntity.ViewPriority)
+                    visEntity = curr;
+            }
+            return visEntity;
         }
 
-        public List<Entity> GetEntities(int tileID)
+        public Point GetEntityPosition(int ID)
         {
-            List<Entity> ents;
-            entities.TryGetValue(tileID, out ents);
-            return (ents == null) ? Level.EmptyEntityList : entities[tileID];
+            return Tile.IDToPosition(entitiesOnTile.Where(t => t.Value.Contains(ID)).First().Key);
         }
 
-        public void AddTileEntity(int tileID, Entity ent)
+        public List<int> GetEntities(int tileID)
         {
-            List<Entity> currentEntities;
-            entities.TryGetValue(tileID, out currentEntities);
+            List<int> ents;
+            entitiesOnTile.TryGetValue(tileID, out ents);
+            return (ents == null) ? Level.EmptyEntityList : ents;
+        }
+
+        public Entity GetEntity(int id)
+        {
+            return entityDict[id];
+        }
+
+        public void AddEntity(int x, int y, Entity ent)
+        {
+            AddEntity(Tile.PositionToID(x, y), ent);
+        }
+
+        public void AddEntity(int tileID, Entity ent)
+        {
+            entityDict.Add(ent.ID, ent);
+            AddEntityAtPos(tileID, ent);
+        }
+
+        public void AddEntityAtPos(int tileID, Entity ent)
+        {
+            List<int> currentEntities;
+            entitiesOnTile.TryGetValue(tileID, out currentEntities);
             if (currentEntities == null) //we have no existing entities
-                entities[tileID] = new List<Entity>();
-            entities[tileID].Add(ent);
+                entitiesOnTile[tileID] = new List<int>();
+            entitiesOnTile[tileID].Add(ent.ID);
+        }
+
+        public void SetLightingForRecompute()
+        {
+            doesLightingNeedUpdate = true;
+        }
+
+        public void AddEntityAtPos(int x, int y, Entity ent)
+        {
+            AddEntityAtPos(Tile.PositionToID(x, y), ent);
+        }
+
+        public void RemoveEntityAtPos(Entity entity)
+        {
+            List<int> entitiesHere = GetEntities(Tile.PositionToID(entity.Position));
+            entitiesHere.Remove(entity.ID);
         }
 
         public Level(ushort width, ushort height)
@@ -58,7 +125,7 @@ namespace DarkRL
             Width = width;
             Height = height;
             tileData = new Tile[width, height];
-
+            lightingMap = new TCODMap(width, height);
         }
 
         public void Generate()
@@ -77,8 +144,69 @@ namespace DarkRL
                     }
                 }
             }
-
             generator.Generate();
-        }       
+
+            AddPlayer();
+
+
+
+            //setup our lighting et al
+            for (ushort x = 0; x < Width; ++x)
+            {
+                for (ushort y = 0; y < Height; ++y)
+                {
+                    lightingMap.setProperties(x, y, !this[x, y].IsObscuring, this[x, y].IsWalkable);
+                }
+            }
+            lightingMap.computeFov(30, 30, 10, true, TCODFOVTypes.Permissive3Fov);
+            this[30, 30].BackgroundColor = TCODColor.red;
+            for (int x = 20; x < 40; ++x)
+            {
+                for (int y = 20; y < 40; ++y)
+                {
+                    if (lightingMap.isInFov(x, y) && ((30 - x) * (30 - x)) + ((30 - y) * (30 - y)) <= 144)
+                        AddEntity(this[x, y].ID, new Entity(this) { Character = '.', Color = TCODColor.gold });
+                }
+            }
+        }
+
+        private void AddPlayer()
+        {
+            Point playerPoint;
+            do
+            {
+                playerPoint = new Point(DarkRL.Random.getInt(0, Width), DarkRL.Random.getInt(0, Height));
+            } while (!this[playerPoint].IsWalkable);
+
+            Player player = new Player(this);
+            this.AddEntity(this[playerPoint].ID, player);
+        }
+
+        public void Update()
+        {
+            lightingMap.computeFov(Player.Position.X, Player.Position.Y, 10);
+            doesLightingNeedUpdate = false;
+        }
+
+        public void Draw(Window window, Camera camera)
+        {
+            for (int x = camera.Left; x < camera.Right; ++x)
+            {
+                for (int y = camera.Top; y < camera.Bottom; ++y)
+                {
+                    TCODColor g = TCODColor.darkestGrey;
+                    if (lightingMap.isInFov(x, y))
+                    {
+
+                        int windowX = x - camera.Left;
+                        int windowY = y - camera.Top;
+                        if (this[x, y].VisibleEntity == null)
+                            window.Draw(this[x, y].BackgroundColor, windowX, windowY);
+                        else
+                            window.Draw(this[x, y].BackgroundColor, this[x, y].VisibleEntity.Color, this[x, y].VisibleEntity.Character, windowX, windowY);
+                    }
+                }
+            }
+        }
     }
 }
