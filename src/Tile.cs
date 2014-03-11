@@ -9,7 +9,9 @@ namespace DarkRL
 {
     class TileData
     {
-        public TCODColor BackgroundColor { get; set; }
+        public TCODColor Color { get; set; }
+
+        public char Character { get; set; }
 
         public bool IsWalkable { get; set; }
 
@@ -28,29 +30,30 @@ namespace DarkRL
 
         public TileData(TileData data)
         {
-            BackgroundColor = data.BackgroundColor;
+            Color = data.Color;
             IsWalkable = data.IsWalkable;
             IsObscuring = data.IsObscuring;
+            Character = data.Character;
         }
 
         public TileData()
         {
-            BackgroundColor = Tile.DefaultBackgroundColor;
+            Color = Tile.DefaultColor;
             IsWall = false;
         }
     }
 
     class Tile
     {
-        public static TCODColor DefaultBackgroundColor = TCODColor.darkerGrey;
+        public static TCODColor DefaultColor = TCODColor.black;
 
-        public static TileData Blank = new TileData(){ BackgroundColor = DefaultBackgroundColor };
+        public static TileData Blank = new TileData(){ Color = DefaultColor };
 
-        public static TileData Floor = new TileData() { BackgroundColor = TCODColor.grey, IsWall = false };
+        public static TileData Floor = new TileData() { Color = TCODColor.lightGrey, Character = '.', IsWall = false };
 
-        public static TileData Door = new TileData() { BackgroundColor = TCODColor.gold, IsWall = true };
+        public static TileData ClosedDoor = new TileData() { Color = TCODColor.gold, Character = '+', IsWall = true };
 
-        public static TileData Wall = new TileData() { BackgroundColor = TCODColor.darkGrey, IsWall = true };
+        public static TileData Wall = new TileData() { Color = TCODColor.darkGrey, Character = '#', IsWall = true };
 
         public static Tile BlankTile = new Tile(null, 0, Blank);
 
@@ -69,16 +72,16 @@ namespace DarkRL
             return PositionToID(point.X, point.Y);
         }
 
-        public TCODColor BackgroundColor
+        public TCODColor Color
         {
             get
             {
-                return Data.BackgroundColor;
+                return Data.Color;
             }
             set
             {
                 Data = new TileData(Data);
-                Data.BackgroundColor = value;
+                Data.Color = value;
             }
         }
 
@@ -92,6 +95,19 @@ namespace DarkRL
             {
                 Data = new TileData(Data);
                 Data.IsWalkable = value;
+            }
+        }
+
+        public char Character
+        {
+            get
+            {
+                return Data.Character;
+            }
+            set
+            {
+                Data = new TileData(Data);
+                Data.Character = value;
             }
         }
 

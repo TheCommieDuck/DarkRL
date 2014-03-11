@@ -17,15 +17,15 @@ namespace DarkRL
 
         private Tile[,] tileData;
 
-        private TCODMap lightingMap;
-
-        private bool doesLightingNeedUpdate = true;
+        private LightingMap lightingMap;
 
         private Dictionary<int, List<int>> entitiesOnTile = new Dictionary<int, List<int>>();
 
         private Dictionary<int, Entity> entityDict = new Dictionary<int, Entity>();
 
         private static List<int> EmptyEntityList = new List<int>();
+
+        private bool needsLightingRecalc = true;
 
         public Entity Player
         {
@@ -69,7 +69,7 @@ namespace DarkRL
 
         public Point GetEntityPosition(int ID)
         {
-            return Tile.IDToPosition(entitiesOnTile.Where(t => t.Value.Contains(ID)).First().Key);
+            return Tile.IDToPosition(entitiesOnTile.Where(t => t.Value.Contains(ID)).FirstOrDefault().Key);
         }
 
         public List<int> GetEntities(int tileID)
@@ -104,11 +104,6 @@ namespace DarkRL
             entitiesOnTile[tileID].Add(ent.ID);
         }
 
-        public void SetLightingForRecompute()
-        {
-            doesLightingNeedUpdate = true;
-        }
-
         public void AddEntityAtPos(int x, int y, Entity ent)
         {
             AddEntityAtPos(Tile.PositionToID(x, y), ent);
@@ -125,7 +120,7 @@ namespace DarkRL
             Width = width;
             Height = height;
             tileData = new Tile[width, height];
-            lightingMap = new TCODMap(width, height);
+            lightingMap = new LightingMap(Width, Height);
         }
 
         public void Generate()
@@ -148,23 +143,26 @@ namespace DarkRL
 
             AddPlayer();
 
-
-
             //setup our lighting et al
             for (ushort x = 0; x < Width; ++x)
             {
                 for (ushort y = 0; y < Height; ++y)
                 {
-                    lightingMap.setProperties(x, y, !this[x, y].IsObscuring, this[x, y].IsWalkable);
+                    lightingMap.SetCellPropertyObscuring(x, y, this[x, y].IsObscuring);
                 }
             }
-            lightingMap.computeFov(30, 30, 10, true, TCODFOVTypes.Permissive3Fov);
-            this[30, 30].BackgroundColor = TCODColor.red;
+            LightSource l = new LightSource(this);
+            l.LightRadius = 10;
+            AddEntity(30, 30, l);
+            lightingMap.AddLightSource(l);
+            lightingMap.CalculateFOV();
+            this[30, 30].Color = TCODColor.red;
+
             for (int x = 20; x < 40; ++x)
             {
                 for (int y = 20; y < 40; ++y)
                 {
-                    if (lightingMap.isInFov(x, y) && ((30 - x) * (30 - x)) + ((30 - y) * (30 - y)) <= 144)
+                    if (lightingMap.GetLightLevel(x, y) == 1)
                         AddEntity(this[x, y].ID, new Entity(this) { Character = '.', Color = TCODColor.gold });
                 }
             }
@@ -180,12 +178,14 @@ namespace DarkRL
 
             Player player = new Player(this);
             this.AddEntity(this[playerPoint].ID, player);
+            this.AddEntity(this[playerPoint].ID, player.Lantern);
         }
 
         public void Update()
         {
-            lightingMap.computeFov(Player.Position.X, Player.Position.Y, 10);
-            doesLightingNeedUpdate = false;
+            if(needsLightingRecalc)
+                lightingMap.CalculateFOV();
+            needsLightingRecalc = false;
         }
 
         public void Draw(Window window, Camera camera)
@@ -194,19 +194,35 @@ namespace DarkRL
             {
                 for (int y = camera.Top; y < camera.Bottom; ++y)
                 {
-                    TCODColor g = TCODColor.darkestGrey;
-                    if (lightingMap.isInFov(x, y))
+                    int windowX = x - camera.Left;
+                    int windowY = y - camera.Top;
+                    int light = lightingMap.GetLightLevel(x, y);
+                    if (light != 0 || lightingMap.GetExplored(x, y))
                     {
-
-                        int windowX = x - camera.Left;
-                        int windowY = y - camera.Top;
-                        if (this[x, y].VisibleEntity == null)
-                            window.Draw(this[x, y].BackgroundColor, windowX, windowY);
+                        float lightMod;
+                        if (lightingMap[x, y].IsExplored && light == 0)
+                            lightMod = 0.2f;
                         else
-                            window.Draw(this[x, y].BackgroundColor, this[x, y].VisibleEntity.Color, this[x, y].VisibleEntity.Character, windowX, windowY);
+                            lightMod = Math.Min(1f, ((light * 0.8f) / 10f) + 0.2f);
+
+                        window.Draw(lightMod,
+                            this[x, y].VisibleEntity == null ? this[x, y].Color : this[x, y].VisibleEntity.Color,
+                            this[x, y].VisibleEntity == null ? this[x, y].Character : this[x, y].VisibleEntity.Character, windowX, windowY);
                     }
+                    else
+                        window.Draw(TCODColor.black, windowX, windowY);
                 }
             }
+        }
+
+        public void AddLightSource(LightSource Lantern)
+        {
+            lightingMap.AddLightSource(Lantern);
+        }
+
+        internal void NeedsLightingUpdate()
+        {
+            needsLightingRecalc = true;
         }
     }
 }

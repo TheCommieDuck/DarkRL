@@ -37,9 +37,9 @@ namespace DarkRL
             {
                 InputSystem.WaitForInput();
                 world.CurrentLevel.Update();
-                window.Update();
                 camera.Update();
                 Draw();
+                window.Update();
             }
         }
 

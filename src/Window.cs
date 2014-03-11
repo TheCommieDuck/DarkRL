@@ -43,7 +43,8 @@ namespace DarkRL
         //Initialisation logic
         public void Init()
         {
-            libtcod.TCODConsole.initRoot(50, 30, "DarkRL", false, TCODRendererType.GLSL);
+            TCODConsole.setCustomFont("oryx_tiles.png", ((int)TCODFontFlags.Greyscale | (int)TCODFontFlags.LayoutTCOD), 32, 12);
+            TCODConsole.initRoot(100, 60, "DarkRL", false, TCODRendererType.GLSL);
             console = TCODConsole.root;
             TCODConsole.checkForKeypress();
             console.setBackgroundColor(TCODColor.darkestGrey);
@@ -51,7 +52,12 @@ namespace DarkRL
 
         public void Draw(TCODColor backgroundColor, TCODColor foregroundColor, char character, int x, int y)
         {
-            console.putCharEx(x, y, character, foregroundColor, backgroundColor);
+                console.putCharEx(x, y, character, foregroundColor, backgroundColor);
+        }
+
+        public void Draw(float lightMod, TCODColor foregroundColor, char character, int x, int y)
+        {
+            console.putCharEx(x, y, character, foregroundColor.Multiply(lightMod), TCODColor.black);
         }
 
         public void Update()
@@ -65,7 +71,7 @@ namespace DarkRL
         }
 
 
-        internal void Draw(TCODColor backgroundColor, int x, int y)
+        public void Draw(TCODColor backgroundColor, int x, int y)
         {
             console.setCharBackground(x, y, backgroundColor);
         }

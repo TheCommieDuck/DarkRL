@@ -285,7 +285,7 @@ namespace DarkRL
                         }
 
                         if (visited[x, y].IsDoor)
-                            level[x + 1, y + 1].Data = Tile.Door;
+                            level[x + 1, y + 1].Data = Tile.ClosedDoor;
                     }
                 }
             }
@@ -712,6 +712,13 @@ namespace DarkRL
                     {
                         visited[p.X, p.Y].IsDoor = true;
                         actualDoors++;
+                    }
+                    else
+                    {
+                        visited[p.X, p.Y].TopWall = true;
+                        visited[p.X, p.Y].BottomWall = true;
+                        visited[p.X, p.Y].LeftWall = true;
+                        visited[p.X, p.Y].RightWall = true;
                     }
                 }
             }
