@@ -35,7 +35,10 @@ namespace DarkRL
             Point pos = Position;
             Point newPos = new Point(pos.X + x, pos.Y + y);
             if (!l[newPos].IsWalkable)
+            {
+                DarkRL.WriteMessage("There is something in the way.");
                 return;
+            }
             SetPosition(newPos);
         }
 

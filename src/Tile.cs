@@ -7,6 +7,14 @@ using libtcod;
 
 namespace DarkRL
 {
+    public enum TileType
+    {
+        Floor,
+        Wall,
+        ClosedDoor,
+        OpenDoor
+    }
+
     class TileData
     {
         public TCODColor Color { get; set; }
@@ -26,7 +34,7 @@ namespace DarkRL
             }
         }
 
-        //public bool IsWall { }
+        public TileType Type { get; set; }
 
         public TileData(TileData data)
         {
@@ -34,12 +42,14 @@ namespace DarkRL
             IsWalkable = data.IsWalkable;
             IsObscuring = data.IsObscuring;
             Character = data.Character;
+            Type = data.Type;
         }
 
         public TileData()
         {
             Color = Tile.DefaultColor;
             IsWall = false;
+            Type = TileType.Floor;
         }
     }
 
@@ -49,13 +59,18 @@ namespace DarkRL
 
         public static TileData Blank = new TileData(){ Color = DefaultColor };
 
-        public static TileData Floor = new TileData() { Color = TCODColor.lightGrey, Character = '.', IsWall = false };
+        public static TileData Floor = new TileData() { Type = TileType.Floor, Color = TCODColor.lightGrey, Character = '.', IsWall = false };
 
-        public static TileData ClosedDoor = new TileData() { Color = TCODColor.gold, Character = '+', IsWall = true };
+        public static TileData ClosedDoor = new TileData() { Type = TileType.ClosedDoor, Color = TCODColor.gold, Character = '+', IsWall = true };
 
-        public static TileData Wall = new TileData() { Color = TCODColor.darkGrey, Character = '#', IsWall = true };
+        public static TileData Wall = new TileData() { Type = TileType.Wall, Color = TCODColor.darkGrey, Character = '#', IsWall = true };
+
+        public static TileData OpenLeftRightDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '|', IsObscuring = false, IsWalkable = true };
+
+        public static TileData OpenUpDownDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '-', IsObscuring = false, IsWalkable = true };
 
         public static Tile BlankTile = new Tile(null, 0, Blank);
+
 
         public static Point IDToPosition(int id)
         {
@@ -71,6 +86,8 @@ namespace DarkRL
         {
             return PositionToID(point.X, point.Y);
         }
+
+        private TileData data;
 
         public TCODColor Color
         {
@@ -98,6 +115,20 @@ namespace DarkRL
             }
         }
 
+        public TileType Type 
+        {
+            get
+            {
+                return Data.Type;
+            }
+            set
+            {
+                Data = new TileData(Data);
+                Data.Type = value;
+                level.SetLightingCellObscured(IDToPosition(ID), Data.IsObscuring);
+            }
+        }
+
         public char Character
         {
             get
@@ -121,13 +152,28 @@ namespace DarkRL
             {
                 Data = new TileData(Data);
                 Data.IsObscuring = value;
+                level.SetLightingCellObscured(IDToPosition(ID), value);
             }
         }
 
-        public TileData Data { get; set; }
+        public TileData Data
+        {
+            get
+            {
+                return data;
+            }
+            set
+            {
+                data = value;
+            }
+        }
 
         public int ID { get; private set; }
 
+        public void UpdateThisInLightingMap()
+        {
+            level.SetLightingCellObscured(IDToPosition(ID), this.IsObscuring);
+        }
         public Entity VisibleEntity
         {
             get

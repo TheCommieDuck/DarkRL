@@ -22,6 +22,13 @@ namespace DarkRL
             }
         }
 
+        public static Key WaitForAndReturnInput()
+        {
+            TCODKey rawKey = TCODConsole.waitForKeypress(true);
+            Key key = new Key(rawKey);
+            return key;
+        }
+
         public static void RegisterInputEvent(Key key, Action keyEvent)
         {
             List<Action> actions;
@@ -32,6 +39,12 @@ namespace DarkRL
             }
 
             events[key].Add(keyEvent);
+        }
+
+        public static void RegisterInputEvent(Key[] keys, Action action)
+        {
+            foreach (Key k in keys)
+                RegisterInputEvent(k, action);
         }
     }
 }

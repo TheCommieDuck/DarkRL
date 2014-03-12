@@ -183,9 +183,7 @@ namespace DarkRL
 
         public void Update()
         {
-            if(needsLightingRecalc)
-                lightingMap.CalculateFOV();
-            needsLightingRecalc = false;
+            LightingUpdate();
         }
 
         public void Draw(Window window, Camera camera)
@@ -223,6 +221,18 @@ namespace DarkRL
         internal void NeedsLightingUpdate()
         {
             needsLightingRecalc = true;
+        }
+
+        public void LightingUpdate()
+        {
+            if (needsLightingRecalc)
+                lightingMap.CalculateFOV();
+            needsLightingRecalc = false;
+        }
+
+        public void SetLightingCellObscured(Point pos, bool obscuring)
+        {
+            lightingMap.SetCellPropertyObscuring((ushort)pos.X, (ushort)pos.Y, obscuring);
         }
     }
 }
