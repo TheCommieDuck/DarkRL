@@ -151,21 +151,6 @@ namespace DarkRL
                     lightingMap.SetCellPropertyObscuring(x, y, this[x, y].IsObscuring);
                 }
             }
-            LightSource l = new LightSource(this);
-            l.LightRadius = 10;
-            AddEntity(30, 30, l);
-            lightingMap.AddLightSource(l);
-            lightingMap.CalculateFOV();
-            this[30, 30].Color = TCODColor.red;
-
-            for (int x = 20; x < 40; ++x)
-            {
-                for (int y = 20; y < 40; ++y)
-                {
-                    if (lightingMap.GetLightLevel(x, y) == 1)
-                        AddEntity(this[x, y].ID, new Entity(this) { Character = '.', Color = TCODColor.gold });
-                }
-            }
         }
 
         private void AddPlayer()
@@ -176,6 +161,8 @@ namespace DarkRL
                 playerPoint = new Point(DarkRL.Random.getInt(0, Width), DarkRL.Random.getInt(0, Height));
             } while (!this[playerPoint].IsWalkable);
 
+            this.AddEntity(this[playerPoint].ID, Item.NewBarOfFoobium(this));
+            this.AddEntity(this[playerPoint].ID, Item.NewBarOfFoobium(this));
             Player player = new Player(this);
             this.AddEntity(this[playerPoint].ID, player);
             this.AddEntity(this[playerPoint].ID, player.Lantern);

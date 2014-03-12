@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace DarkRL
 {
-    class Player : Entity
+    class Player : Mob
     {
         public LightSource Lantern;
         public Player(Level l)
-            :base(l, true)
+            :base(l, "player", true)
         {
             this.Character = '@';
             this.ViewPriority = Int32.MaxValue;
@@ -24,6 +24,19 @@ namespace DarkRL
             l.NeedsLightingUpdate();
             base.SetPosition(x, y);
             Lantern.SetPosition(x, y);
+            //see if anything is here
+            List<int> entities = new List<int>(l.GetEntities(Tile.PositionToID(x, y)));
+            entities.Remove(0);
+            entities.Remove(Lantern.ID);
+            if (entities.Count > 0)
+            {
+                if (entities.Count == 1)
+                {
+                    DarkRL.WriteMessage("You see a " + l.GetEntity(entities[0]).Name + " here.");
+                }
+                else
+                    DarkRL.WriteMessage("You see a whole load of various crap here.");
+            }
         }
 
         public void Open()

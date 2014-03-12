@@ -6,6 +6,29 @@ using libtcod;
 
 namespace DarkRL
 {
+    class Mob : Entity
+    {
+        public Backpack Backpack;
+
+        public void DropItem(Item i)
+        {
+            Backpack.RemoveItem(i);
+            i.Owner = null;
+            l.AddEntityAtPos(Tile.PositionToID(this.Position), i);
+        }
+
+        public void PickupItem(Item i)
+        {
+            l.RemoveEntityAtPos(i);
+            Backpack.AddItem(i);
+        }
+
+        public Mob(Level l, String name = "something evil looking", bool isPlayer=false)
+            :base(l, name, isPlayer)
+        {
+        }
+    }
+
     class Entity
     {
         public static int CurrGUID = 1;
@@ -22,7 +45,9 @@ namespace DarkRL
 
         public char Character { get; set; }
 
-        public Point Position
+        public String Name { get; protected set; }
+
+        public virtual Point Position
         {
             get
             {
@@ -55,13 +80,14 @@ namespace DarkRL
 
         protected Level l;
 
-        public Entity(Level level, bool isPlayer=false)
+        public Entity(Level level, String name = "something", bool isPlayer=false)
         {
             ID = isPlayer ? 0 : Entity.CurrGUID++;
             Color = DefaultColor;
             Character = DefaultCharacter;
             ViewPriority = DefaultViewPriority;
             l = level;
+            this.Name = name;
         }
     }
 }
