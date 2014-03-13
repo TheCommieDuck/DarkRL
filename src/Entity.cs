@@ -10,6 +10,8 @@ namespace DarkRL
     {
         public Backpack Backpack;
 
+        public Stat HP;
+
         public void DropItem(Item i)
         {
             Backpack.RemoveItem(i);
@@ -23,10 +25,14 @@ namespace DarkRL
             Backpack.AddItem(i);
         }
 
-        public Mob(Level l, String name = "something evil looking", bool isPlayer=false)
+        public Mob(Level l, String name = "something evil looking", int HPval = 20, bool isPlayer=false)
             :base(l, name, isPlayer)
         {
             Backpack = new Backpack(this);
+            if (isPlayer)
+                HP = new Stat("HP", HPval, true, Player.HPDesc);
+            else
+                HP = new Stat("HP", HPval);
         }
     }
 
@@ -62,7 +68,8 @@ namespace DarkRL
             Point newPos = new Point(pos.X + x, pos.Y + y);
             if (!l[newPos].IsWalkable)
             {
-                DarkRL.WriteMessage("There is something in the way.");
+                if(l[newPos].Type != TileType.Wall)
+                    DarkRL.WriteMessage("There is " + l[newPos].Name + " in the way.");
                 return;
             }
             SetPosition(newPos);

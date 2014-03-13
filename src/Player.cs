@@ -8,11 +8,18 @@ namespace DarkRL
 {
     class Player : Mob
     {
+
+        public static Dictionary<int, String> HPDesc = new Dictionary<int,string>()
+        {
+            {20, "feeling perfectly fine" },
+            {0, "*coughs up blood*"}
+        };
+
         public static Player MainPlayer;
         public LightSource Lantern;
 
         public Player(Level l)
-            :base(l, "dickbutt", true)
+            :base(l, "dickbutt", 50, true)
         {
             MainPlayer = this;
             this.Character = '@';

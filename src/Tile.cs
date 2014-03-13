@@ -25,6 +25,8 @@ namespace DarkRL
 
         public bool IsObscuring { get; set; }
 
+        public String Name { get; set; }
+
         public bool IsWall
         {
             set
@@ -43,6 +45,8 @@ namespace DarkRL
             IsObscuring = data.IsObscuring;
             Character = data.Character;
             Type = data.Type;
+            Name = (String)data.Name.Clone();
+            
         }
 
         public TileData()
@@ -50,6 +54,7 @@ namespace DarkRL
             Color = Tile.DefaultColor;
             IsWall = false;
             Type = TileType.Floor;
+            Name = "something";
         }
     }
 
@@ -61,13 +66,13 @@ namespace DarkRL
 
         public static TileData Floor = new TileData() { Type = TileType.Floor, Color = TCODColor.lightGrey, Character = '.', IsWall = false };
 
-        public static TileData ClosedDoor = new TileData() { Type = TileType.ClosedDoor, Color = TCODColor.gold, Character = '+', IsWall = true };
+        public static TileData ClosedDoor = new TileData() { Type = TileType.ClosedDoor, Color = TCODColor.gold, Character = '+', IsWall = true, Name = "a closed door" };
 
-        public static TileData Wall = new TileData() { Type = TileType.Wall, Color = TCODColor.darkGrey, Character = '#', IsWall = true };
+        public static TileData Wall = new TileData() { Type = TileType.Wall, Color = TCODColor.darkGrey, Character = '#', IsWall = true, Name = "a wall" };
 
-        public static TileData OpenLeftRightDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '|', IsObscuring = false, IsWalkable = true };
+        public static TileData OpenLeftRightDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '|', IsObscuring = false, IsWalkable = true, Name = "an open door" };
 
-        public static TileData OpenUpDownDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '-', IsObscuring = false, IsWalkable = true };
+        public static TileData OpenUpDownDoor = new TileData() { Type = TileType.OpenDoor, Color = TCODColor.gold, Character = '-', IsObscuring = false, IsWalkable = true, Name = "an open door" };
 
         public static Tile BlankTile = new Tile(null, 0, Blank);
 
@@ -165,6 +170,19 @@ namespace DarkRL
             set
             {
                 data = value;
+            }
+        }
+
+        public string Name 
+        {
+            get
+            {
+                return Data.Name;
+            }
+            set
+            {
+                Data = new TileData(Data);
+                Data.Name = value;
             }
         }
 

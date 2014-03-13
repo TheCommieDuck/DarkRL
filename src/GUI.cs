@@ -17,7 +17,7 @@ namespace DarkRL
             statusWindow = new TCODConsole(win.StatusPanelWidth, win.Height);
             eventLog = new TCODConsole(win.Width - win.StatusPanelWidth, win.MessagePanelHeight);
             statusWindow.setAlignment(TCODAlignment.CenterAlignment);
-            statusWindow.setBackgroundColor(TCODColor.darkestRed.Multiply(0.5f));
+            statusWindow.setBackgroundColor(TCODColor.darkestRed.Multiply(0.1f));
             this.main = main;
             this.window = win;
         }
@@ -33,13 +33,14 @@ namespace DarkRL
             eventLog.clear();
             statusWindow.clear();
             //draw status window
+            int currentY = 1;
 
-            WriteToStatusWindow("Player Name:", 1, TCODColor.white);
-            WriteToStatusWindow(Player.MainPlayer.Name, 2, TCODColor.white);
-            WriteToStatusWindow("Life:", 4, TCODColor.white);
-            WriteToStatusWindow("Feeling fine.", 5, TCODColor.white);
-            WriteToStatusWindow("Sanity:", 7, TCODColor.white);
-            WriteToStatusWindow("gone mad lol", 8, TCODColor.white);
+            currentY += WriteToStatusWindow("Player Name:", currentY, TCODColor.white);
+            currentY += WriteToStatusWindow(Player.MainPlayer.Name, currentY++, TCODColor.white);
+            currentY += WriteToStatusWindow("Life:", ++currentY, TCODColor.white);
+            currentY += WriteToStatusWindow(Player.MainPlayer.HP.ToString(), ++currentY, TCODColor.white) + 1;
+            currentY += WriteToStatusWindow("Sanity:", ++currentY, TCODColor.white);
+            currentY += WriteToStatusWindow("gone mad lol", ++currentY, TCODColor.white);
 
             //draw event log
             int msgCount = 0;
@@ -57,15 +58,15 @@ namespace DarkRL
             TCODConsole.blit(statusWindow, 0, 0, statusWindow.getWidth(), statusWindow.getHeight(), main, 0, 0);
         }
 
-        public void WriteString(TCODConsole console, int x, int y, string msg, TCODColor col)
+        public int WriteString(TCODConsole console, int x, int y, string msg, TCODColor col)
         {
             console.setForegroundColor(col);
-            console.print(x, y, msg);
+            return console.printRect(x, y, console.getWidth(), 0, msg);
         }
 
-        public void WriteToStatusWindow(string msg, int y, TCODColor col)
+        public int WriteToStatusWindow(string msg, int y, TCODColor col)
         {
-            WriteString(statusWindow, statusWindow.getWidth() / 2, y, msg, col);
+            return WriteString(statusWindow, statusWindow.getWidth() / 2, y, msg, col);
         }
     }
 }
