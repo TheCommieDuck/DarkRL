@@ -10,7 +10,7 @@ namespace DarkRL
     {
         public Backpack Backpack;
 
-        public Stat HP;
+        public Stat HP { get; protected set;}
 
         public void DropItem(Item i)
         {
@@ -96,6 +96,11 @@ namespace DarkRL
             ViewPriority = DefaultViewPriority;
             l = level;
             this.Name = name;
+        }
+
+        public override string ToString()
+        {
+            return this.Name;
         }
     }
 }

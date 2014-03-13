@@ -84,10 +84,11 @@ namespace DarkRL
             window.Init();
             world = new World();
             messages = new List<string>();
-            gui = new GUI(window, TCODConsole.root);
+
 
             camera = new Camera(0, 0, window.Width, window.Height-window.MessagePanelHeight);
             camera.CentreOn(world.CurrentLevel.Player.Position);
+            gui = new GUI(window, TCODConsole.root, camera);
             Player player = (Player)world.CurrentLevel.Player;
             camera.SetFocus(player);
             InputSystem.RegisterInputEvent(LeftMovement, () => player.Move(-1, 0));

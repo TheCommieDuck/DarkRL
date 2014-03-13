@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using libtcod;
-
+using BackpackSlot = System.Collections.Generic.KeyValuePair<System.String, DarkRL.Item>;
 namespace DarkRL
 {
     class Item : Entity
@@ -61,6 +61,19 @@ namespace DarkRL
         {
             items.Remove(i);
             i.Owner = null;
+        }
+
+        public IEnumerable<KeyValuePair<String, Item>> Items 
+        {
+            get
+            {
+                char itemKey = 'a';
+                foreach (Item i in items)
+                {
+                    yield return new KeyValuePair<String, Item>(itemKey+")", i);
+                    itemKey++;
+                }
+            }
         }
     }
 }

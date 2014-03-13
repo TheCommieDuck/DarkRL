@@ -11,16 +11,25 @@ namespace DarkRL
 
         public static Dictionary<int, String> HPDesc = new Dictionary<int,string>()
         {
-            {20, "feeling perfectly fine" },
+            {20, "Feeling perfectly fine." },
             {0, "*coughs up blood*"}
+        };
+
+        public static Dictionary<int, String> SanityDesc = new Dictionary<int, string>()
+        {
+            {30, "Everything is fine." },
+            {0, "ohgod ohgod ohgod ohgod"}
         };
 
         public static Player MainPlayer;
         public LightSource Lantern;
+        public Stat Sanity { get; private set; }
 
         public Player(Level l)
             :base(l, "dickbutt", 50, true)
         {
+            Sanity = new Stat("Sanity", 30, true, Player.SanityDesc);
+            Sanity.Value -= 5;
             MainPlayer = this;
             this.Character = '@';
             this.ViewPriority = Int32.MaxValue;
