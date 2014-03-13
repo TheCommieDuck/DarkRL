@@ -13,8 +13,8 @@ namespace DarkRL
         public static TCODRandom Random = TCODRandom.getInstance();
         private Window window;
         private World world;
+        private GUI gui;
         private Camera camera;
-        private int guiHeight = 4;
         private static DarkRL main;
 
         public static Key[] LeftMovement = new Key[]{new Key('h'), new Key('a')};
@@ -67,19 +67,14 @@ namespace DarkRL
             world.CurrentLevel.LightingUpdate();
             window.Clear();
             world.CurrentLevel.Draw(window, camera);
-            int msgCount = 0;
-            for (int y = camera.Bottom; y < guiHeight + camera.Bottom; ++y)
-            {
-                int windowY = y - camera.Top;
-                int msgIndex = (messages.Count + camera.Bottom) - (y + 1);
-                if (msgIndex >= 0)
-                {
-                    float darken = 1f - ((float)msgCount / (float)guiHeight);
-                    window.WriteString(0, windowY, messages[msgIndex], TCODColor.white.Multiply(darken));
-                    msgCount++;
-                }
-            }
+            gui.Draw(messages);
+            
             window.Update();
+        }
+
+        private void DrawGUI()
+        {
+            
         }
 
         public void Init()
@@ -89,8 +84,9 @@ namespace DarkRL
             window.Init();
             world = new World();
             messages = new List<string>();
+            gui = new GUI(window, TCODConsole.root);
 
-            camera = new Camera(0, 0, window.Width, window.Height-guiHeight);
+            camera = new Camera(0, 0, window.Width, window.Height-window.MessagePanelHeight);
             camera.CentreOn(world.CurrentLevel.Player.Position);
             Player player = (Player)world.CurrentLevel.Player;
             camera.SetFocus(player);
@@ -99,7 +95,7 @@ namespace DarkRL
             InputSystem.RegisterInputEvent(UpMovement, () => player.Move(0, -1));
             InputSystem.RegisterInputEvent(RightMovement, () => player.Move(1, 0));
             InputSystem.RegisterInputEvent(new Key('o'), () => player.Open());
-
+            InputSystem.RegisterInputEvent(new Key('g'), () => player.PickupItem());
             window.Update();
             Draw();
         }

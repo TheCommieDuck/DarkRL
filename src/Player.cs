@@ -8,10 +8,13 @@ namespace DarkRL
 {
     class Player : Mob
     {
+        public static Player MainPlayer;
         public LightSource Lantern;
+
         public Player(Level l)
-            :base(l, "player", true)
+            :base(l, "dickbutt", true)
         {
+            MainPlayer = this;
             this.Character = '@';
             this.ViewPriority = Int32.MaxValue;
             Lantern = new LightSource(l);
@@ -24,10 +27,7 @@ namespace DarkRL
             l.NeedsLightingUpdate();
             base.SetPosition(x, y);
             Lantern.SetPosition(x, y);
-            //see if anything is here
-            List<int> entities = new List<int>(l.GetEntities(Tile.PositionToID(x, y)));
-            entities.Remove(0);
-            entities.Remove(Lantern.ID);
+            List<int> entities = GetEntitiesSharingTileWithThis();
             if (entities.Count > 0)
             {
                 if (entities.Count == 1)
@@ -37,6 +37,19 @@ namespace DarkRL
                 else
                     DarkRL.WriteMessage("You see a whole load of various crap here.");
             }
+        }
+
+        public void PickupItem()
+        {
+            List<int> items = GetEntitiesSharingTileWithThis();
+            if(items.Count == 0)
+            {
+                DarkRL.WriteMessage("There's nothing to pick up..");
+                return;
+            }
+            else if(items.Count == 1)
+                base.PickupItem((Item)l.GetEntity(items[0]));
+            DarkRL.WriteMessage("You pick up the " + l.GetEntity(items[0]).Name);
         }
 
         public void Open()
@@ -71,6 +84,15 @@ namespace DarkRL
             }
             else
                 DarkRL.WriteMessage("There's nothing there to open..");
+        }
+
+        private List<int> GetEntitiesSharingTileWithThis()
+        {
+            //see if anything is here
+            List<int> entities = new List<int>(l.GetEntities(Tile.PositionToID(this.Position)));
+            entities.Remove(0);
+            entities.Remove(Lantern.ID);
+            return entities;
         }
     }
 }

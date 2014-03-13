@@ -143,6 +143,8 @@ namespace DarkRL
 
             AddPlayer();
 
+            AddFoobariumEverywhere();
+
             //setup our lighting et al
             for (ushort x = 0; x < Width; ++x)
             {
@@ -150,6 +152,20 @@ namespace DarkRL
                 {
                     lightingMap.SetCellPropertyObscuring(x, y, this[x, y].IsObscuring);
                 }
+            }
+        }
+
+        private void AddFoobariumEverywhere()
+        {
+            for (int i = 0; i < 60; ++i)
+            {
+                Point fooPoint;
+                do
+                {
+                    fooPoint = new Point(DarkRL.Random.getInt(0, Width), DarkRL.Random.getInt(0, Height));
+                } while (!this[fooPoint].IsWalkable);
+
+                this.AddEntity(this[fooPoint].ID, Item.NewBarOfFoobium(this));
             }
         }
 
@@ -161,8 +177,6 @@ namespace DarkRL
                 playerPoint = new Point(DarkRL.Random.getInt(0, Width), DarkRL.Random.getInt(0, Height));
             } while (!this[playerPoint].IsWalkable);
 
-            this.AddEntity(this[playerPoint].ID, Item.NewBarOfFoobium(this));
-            this.AddEntity(this[playerPoint].ID, Item.NewBarOfFoobium(this));
             Player player = new Player(this);
             this.AddEntity(this[playerPoint].ID, player);
             this.AddEntity(this[playerPoint].ID, player.Lantern);

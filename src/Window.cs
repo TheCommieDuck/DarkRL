@@ -35,6 +35,10 @@ namespace DarkRL
             }
         }
 
+        public int StatusPanelWidth = 15;
+
+        public int MessagePanelHeight = 5;
+
         ~Window()
         {
             console.Dispose();
@@ -47,7 +51,7 @@ namespace DarkRL
             TCODConsole.initRoot(80, 50, "DarkRL", false, TCODRendererType.GLSL);
             console = TCODConsole.root;
             TCODConsole.checkForKeypress();
-            console.setBackgroundColor(TCODColor.darkestGrey);
+            console.setBackgroundColor(TCODColor.black);
         }
 
         public void Draw(TCODColor backgroundColor, TCODColor foregroundColor, char character, int x, int y)
@@ -76,11 +80,7 @@ namespace DarkRL
             console.setCharBackground(x, y, backgroundColor);
         }
 
-        public void WriteString(int x, int y, string msg, TCODColor col)
-        {
-            console.setForegroundColor(col);
-            console.print(x, y, msg);
-        }
+        
 
         public void WriteString(int x, int y, string msg, TCODColor foreCol, TCODColor backCol)
         {

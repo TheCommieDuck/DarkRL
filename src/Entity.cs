@@ -17,7 +17,7 @@ namespace DarkRL
             l.AddEntityAtPos(Tile.PositionToID(this.Position), i);
         }
 
-        public void PickupItem(Item i)
+        public virtual void PickupItem(Item i)
         {
             l.RemoveEntityAtPos(i);
             Backpack.AddItem(i);
@@ -26,6 +26,7 @@ namespace DarkRL
         public Mob(Level l, String name = "something evil looking", bool isPlayer=false)
             :base(l, name, isPlayer)
         {
+            Backpack = new Backpack(this);
         }
     }
 

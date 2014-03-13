@@ -16,7 +16,7 @@ namespace DarkRL
             Item i = new Item(l);
             i.Name = "bar of foobium";
             i.Character = '-';
-            i.Color = TCODColor.darkestGrey;
+            i.Color = TCODColor.darkGrey;
             return i;
         }
 
@@ -43,14 +43,24 @@ namespace DarkRL
     {
         private List<Item> items;
 
+        public Mob Owner { get; set; }
+
+        public Backpack(Mob owner)
+        {
+            Owner = owner;
+            items = new List<Item>();
+        }
+
         public void AddItem(Item i)
         {
+            i.Owner = Owner;
             items.Add(i);
         }
 
         public void RemoveItem(Item i)
         {
             items.Remove(i);
+            i.Owner = null;
         }
     }
 }

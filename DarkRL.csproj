@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\GUI.cs" />
     <Compile Include="src\ItemSystem.cs" />
     <Compile Include="src\Lighting.cs" />
     <Compile Include="QuadTree.cs" />
