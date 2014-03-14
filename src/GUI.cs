@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using libtcod;
-using BackpackSlot = System.Collections.Generic.KeyValuePair<System.String, DarkRL.Item>;
+using DarkRL.Entities;
+using BackpackSlot = System.Collections.Generic.KeyValuePair<System.String, DarkRL.Entities.Item>;
 
 namespace DarkRL
 {

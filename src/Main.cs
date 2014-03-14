@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using libtcod;
-
+using DarkRL.Entities;
 
 namespace DarkRL
 {
@@ -90,13 +90,14 @@ namespace DarkRL
             camera.CentreOn(world.CurrentLevel.Player.Position);
             gui = new GUI(window, TCODConsole.root, camera);
             Player player = (Player)world.CurrentLevel.Player;
-            camera.SetFocus(player);
+            camera.Focus = player;
             InputSystem.RegisterInputEvent(LeftMovement, () => player.Move(-1, 0));
             InputSystem.RegisterInputEvent(DownMovement, () => player.Move(0, 1));
             InputSystem.RegisterInputEvent(UpMovement, () => player.Move(0, -1));
             InputSystem.RegisterInputEvent(RightMovement, () => player.Move(1, 0));
             InputSystem.RegisterInputEvent(new Key('o'), () => player.Open());
             InputSystem.RegisterInputEvent(new Key('g'), () => player.PickupItem());
+            InputSystem.RegisterInputEvent(new Key('r'), () => player.DropItem());
             window.Update();
             Draw();
         }

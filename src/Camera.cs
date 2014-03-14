@@ -4,12 +4,13 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DarkRL.Entities;
 
 namespace DarkRL
 {
     class Camera
     {
-        private Entity focus;
+        public Entity Focus { get; set; }
 
         public Rectangle Viewport { get; private set; }
 
@@ -48,7 +49,7 @@ namespace DarkRL
         public Camera(int topX, int topY, int width, int height)
         {
             Viewport = new Rectangle(topX, topY, width, height);
-            focus = null;
+            Focus = null;
         }
 
         public Camera(Point point, int width, int height)
@@ -56,13 +57,8 @@ namespace DarkRL
 
         public void Update()
         {
-            if(focus != null)
-                this.CentreOn(focus.Position);
-        }
-
-        public void SetFocus(Entity focusPoint)
-        {
-            focus = focusPoint;
+            if(Focus != null)
+                this.CentreOn(Focus.Position);
         }
 
         public void CentreOn(Point point)

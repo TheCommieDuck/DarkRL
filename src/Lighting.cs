@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DarkRL.Entities;
 
 namespace DarkRL
 {
@@ -15,20 +16,36 @@ namespace DarkRL
         public bool IsObscuring;
     }
 
-    class LightSource : Entity
+    class LightSource : Item
     {
         public byte Intensity { get; set; }
 
         public byte LightRadius { get; set; }
 
+        public override Point Position
+        {
+            get
+            {
+                if (this.Owner == null)
+                    return base.Position;
+                else
+                    return Owner.Position;
+            }
+        }
         public LightSource(Level level)
-            : base(level) { }
+            : base(level) 
+        {
+            level.AddLightSource(this);
+        }
     }
 
     class LightingMap
     {
 
         public static float LightScaleDropoff = 16f;
+        public static float IntensityScaleFactor = 10f;
+        public static float ExploredLightScale = 0.1f;
+
         private static int[,] multipliers = 
         {
             {1, 0, 0, -1, -1, 0, 0, 1},
@@ -40,8 +57,6 @@ namespace DarkRL
         private LightingCell[,] cells;
 
         private List<LightSource> lightSources;
-
-        private static double IntensityScaleFactor = 5f;
 
         public ushort Width { get; private set; }
 

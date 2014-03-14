@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using libtcod;
+using DarkRL.Entities;
 
 
 namespace DarkRL
@@ -95,6 +96,11 @@ namespace DarkRL
             AddEntityAtPos(tileID, ent);
         }
 
+        public void AddEntity(Entity ent)
+        {
+            entityDict.Add(ent.ID, ent);
+        }
+
         public void AddEntityAtPos(int tileID, Entity ent)
         {
             List<int> currentEntities;
@@ -178,8 +184,16 @@ namespace DarkRL
             } while (!this[playerPoint].IsWalkable);
 
             Player player = new Player(this);
+            Lantern lantern = new Lantern(this);
+            player.AddItem(lantern);
             this.AddEntity(this[playerPoint].ID, player);
-            this.AddEntity(this[playerPoint].ID, player.Lantern);
+            this.AddEntity(lantern);
+            for (int i = 0; i < 5; ++i)
+            {
+                Torch t = new Torch(this);
+                player.AddItem(t);
+                this.AddEntity(t);
+            }
         }
 
         public void Update()
@@ -200,9 +214,10 @@ namespace DarkRL
                     {
                         float lightMod;
                         if (lightingMap[x, y].IsExplored && light == 0)
-                            lightMod = 0.2f;
+                            lightMod = LightingMap.ExploredLightScale;
                         else
-                            lightMod = Math.Min(1f, ((light * 0.8f) / 10f) + 0.2f);
+                            lightMod = Math.Min(1f, ((light * (1- LightingMap.ExploredLightScale) / LightingMap.IntensityScaleFactor) 
+                                +  LightingMap.ExploredLightScale));
 
                         window.Draw(lightMod,
                             this[x, y].VisibleEntity == null ? this[x, y].Color : this[x, y].VisibleEntity.Color,
