@@ -185,7 +185,8 @@ namespace DarkRL
 
             Player player = new Player(this);
             Lantern lantern = new Lantern(this);
-            player.AddItem(lantern);
+            //player.AddItem(lantern);
+            player.Equip(lantern);
             this.AddEntity(this[playerPoint].ID, player);
             this.AddEntity(lantern);
             for (int i = 0; i < 5; ++i)

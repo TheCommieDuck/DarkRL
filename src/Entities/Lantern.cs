@@ -17,6 +17,8 @@ namespace DarkRL.Entities
             this.Color = TCODColor.brass;
             this.Intensity = 100;
             this.LightRadius = 12;
+            this.ViewPriority = 30;
+            this.Slot = EquipSlot.Lantern;
         }
     }
 
@@ -30,6 +32,7 @@ namespace DarkRL.Entities
             this.Color = TCODColor.gold;
             this.Intensity = 40;
             this.LightRadius = 7;
+            this.ViewPriority = 20;
         }
     }
 }

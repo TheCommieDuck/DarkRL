@@ -8,9 +8,20 @@ using BackpackSlot = System.Collections.Generic.KeyValuePair<System.String, Dark
 
 namespace DarkRL.Entities
 {
+
+    public enum EquipSlot
+    {
+        None,
+        Lantern
+    }
+
     class Item : Entity
     {
         public static Point InInventory = new Point(-69, -69);
+
+        public bool IsEquipped;
+
+        public EquipSlot Slot;
 
         public static Item NewBarOfFoobium(Level l)
         {
@@ -37,6 +48,8 @@ namespace DarkRL.Entities
         public Item(Level l)
             :base(l)
         {
+            Slot = EquipSlot.None;
+            IsEquipped = false;
             ViewPriority = 0;
         }
     }

@@ -54,7 +54,8 @@ namespace DarkRL
 
             foreach (BackpackSlot i in Player.MainPlayer.Backpack.Items)
             {
-                currentY += WriteToStatusWindow(i.Key+ i.Value, ++currentY, TCODColor.white, TCODAlignment.LeftAlignment);
+                currentY += WriteToStatusWindow(i.Key+ i.Value + (i.Value.IsEquipped ? " (equipped)" : ""), ++currentY, TCODColor.white, 
+                    TCODAlignment.LeftAlignment);
             }
 
             //draw event log

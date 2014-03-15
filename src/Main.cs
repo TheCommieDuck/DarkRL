@@ -85,7 +85,6 @@ namespace DarkRL
             world = new World();
             messages = new List<string>();
 
-
             camera = new Camera(0, 0, window.Width, window.Height - Window.MessagePanelHeight);
             camera.CentreOn(world.CurrentLevel.Player.Position);
             gui = new GUI(window, TCODConsole.root, camera);
@@ -99,12 +98,16 @@ namespace DarkRL
             InputSystem.RegisterInputEvent(new Key('g'), () => player.PickupItem());
             InputSystem.RegisterInputEvent(new Key('r'), () => player.DropItem());
             InputSystem.RegisterInputEvent(new Key('i'), () => player.Inspect());
+            InputSystem.RegisterInputEvent(new Key('e'), () => player.Equip());
+            InputSystem.RegisterInputEvent(new Key('u'), () => player.Unequip());
             window.Update();
             Draw();
         }
 
         public static void WriteMessage(string p)
         {
+            if (messages == null)
+                return;
             messages.Add(p);
             main.Draw();
         }

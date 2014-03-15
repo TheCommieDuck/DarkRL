@@ -29,6 +29,8 @@ namespace DarkRL.Entities
 
         public Stat Sanity { get; private set; }
 
+        public Item LanternSlot;
+
         public Player(Level l)
             :base(l, "dickbutt", 50, true)
         {
@@ -53,6 +55,121 @@ namespace DarkRL.Entities
                     DarkRL.WriteMessage("You see a whole load of various crap here.");
             }
             level.NeedsLightingUpdate();
+        }
+
+        public void Equip()
+        {
+            DarkRL.WriteMessage("What do you wish to equip?");
+            Item i = GetBackpackSlot();
+            if (i.Slot == EquipSlot.None)
+            {
+                DarkRL.WriteMessage("You can't equip that.");
+                return;
+            }
+            else
+            {
+                if (GetEquippedItem(i.Slot) == null)
+                {
+                    Equip(i);
+                    return;
+                }
+                else //we've got something already equipped
+                {
+                    DarkRL.WriteMessage("You already have " + GetEquippedItem(i.Slot) + " equipped. Do you wish to swap items? (y/n)");
+                    Key response = InputSystem.WaitForAndReturnInput();
+                    if (response.Character == 'y')
+                    {
+                        String removed = Unequip(i.Slot).Name;
+                        Equip(i);
+                    }
+                }
+            }
+        }
+
+        public Item GetEquippedItem(EquipSlot e)
+        {
+            switch (e)
+            {
+                case EquipSlot.Lantern:
+                    return this.LanternSlot;
+            }
+            return null;
+        }
+
+        public void Equip(Item i)
+        {
+            if (!Backpack.Items.Select(t => t.Value).Contains(i))
+                this.AddItem(i);
+
+            switch (i.Slot)
+            {
+                case EquipSlot.Lantern:
+                    this.LanternSlot = i;
+                    break;
+                case EquipSlot.None:
+                    return;
+            }
+            i.IsEquipped = true;
+            DarkRL.WriteMessage("You equip the " + i.Name + " in your " + i.Slot.ToString() + " slot.");
+        }
+
+        public List<Item> GetAllEquippedItems()
+        {
+            List<Item> items = new List<Item>();
+            if (this.LanternSlot != null)
+                items.Add(this.LanternSlot);
+            return items;
+        }
+
+        public void Unequip()
+        {
+            List<Item> equipped = GetAllEquippedItems();
+            if(equipped.Count == 0)
+            {
+                DarkRL.WriteMessage("There's nothing to unequip.");
+                return;
+            }
+            TCODConsole overlay = new TCODConsole(40, equipped.Count);
+            char sym = 'a';
+            int y = 0;
+            //now display them all
+            foreach (Item i in equipped)
+            {
+
+                overlay.print(0, y, sym.ToString() + ")" + i.ToString());
+                ++y;
+                ++sym;
+            }
+            DarkRL.WriteMessage("What do you want to unequip?");
+            DarkRL.AddOverlayConsole(overlay, 0, 0, overlay.getWidth(), overlay.getHeight(), TCODConsole.root, Window.StatusPanelWidth,
+                Window.MessagePanelHeight);
+            Key input = InputSystem.WaitForAndReturnInput();
+            char index = (char)(input.Character - 'a');
+            if (index >= equipped.Count || index < 0)
+            {
+                DarkRL.WriteMessage("Couldn't find anything..");
+                return;
+            }
+            //so unequip
+            Item item = Unequip(Backpack[index].Slot);
+            return;
+        }
+
+        public Item Unequip(EquipSlot e)
+        {
+            Item i = null;
+            switch (e)
+            {
+                case EquipSlot.Lantern:
+                    i = this.LanternSlot;
+                    this.LanternSlot.IsEquipped = false;
+                    this.LanternSlot = null;
+                    break;
+                case EquipSlot.None:
+                    return null;
+            }
+            DarkRL.WriteMessage("You unequip the " + i.Name + ".");
+            return i;
         }
 
         public void Inspect()
@@ -212,15 +329,12 @@ namespace DarkRL.Entities
         public void DropItem()
         {
             DarkRL.WriteMessage("What do you wish to drop?");
-            Key key = InputSystem.WaitForAndReturnInput();
-            char index = (char)(key.Character - 'a');
-            if (index >= Backpack.Size || index < 0)
+            Item i = GetBackpackSlot();
+            if (i != null)
             {
-                DarkRL.WriteMessage("Couldn't find anything..");
-                return;
+                DropItem(i);
+                DarkRL.WriteMessage("Dropped the " + i + ".");
             }
-            Item i = DropItem(Backpack[index]);
-            DarkRL.WriteMessage("Dropped the " + i + ".");
         }
 
         public void Open()
@@ -257,6 +371,18 @@ namespace DarkRL.Entities
                 DarkRL.WriteMessage("There's nothing there to open..");
         }
 
+        private Item GetBackpackSlot()
+        {
+            Key key = InputSystem.WaitForAndReturnInput();
+            char index = (char)(key.Character - 'a');
+            if (index >= Backpack.Size || index < 0)
+            {
+                DarkRL.WriteMessage("Couldn't find anything..");
+                return null;
+            }
+            return this.Backpack[index];
+        }
+
         private List<int> GetEntitiesSharingTileWithThis()
         {
             //see if anything is here
@@ -268,7 +394,7 @@ namespace DarkRL.Entities
 
         public bool CanSee(Point p)
         {
-            //TODO: stuff
+            //TODO: not have super laser eyes
             return true;
         }
 
