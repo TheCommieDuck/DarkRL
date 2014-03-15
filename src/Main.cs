@@ -98,6 +98,7 @@ namespace DarkRL
             InputSystem.RegisterInputEvent(new Key('o'), () => player.Open());
             InputSystem.RegisterInputEvent(new Key('g'), () => player.PickupItem());
             InputSystem.RegisterInputEvent(new Key('r'), () => player.DropItem());
+            InputSystem.RegisterInputEvent(new Key('i'), () => player.Inspect());
             window.Update();
             Draw();
         }

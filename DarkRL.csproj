@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -54,7 +54,6 @@
     <Compile Include="src\GUI.cs" />
     <Compile Include="src\Entities\Item.cs" />
     <Compile Include="src\Lighting.cs" />
-    <Compile Include="QuadTree.cs" />
     <Compile Include="src\Camera.cs" />
     <Compile Include="src\DungeonGenerator.cs" />
     <Compile Include="src\Entities\Entity.cs" />

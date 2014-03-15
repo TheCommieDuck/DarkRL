@@ -246,6 +246,16 @@ namespace DarkRL
             needsLightingRecalc = false;
         }
 
+        public int GetLightLevel(Point p)
+        {
+            return lightingMap[p.X, p.Y].LightLevel;
+        }
+
+        public LightingCell GetLightingInformation(Point p)
+        {
+            return lightingMap[p.X, p.Y];
+        }
+
         public void SetLightingCellObscured(Point pos, bool obscuring)
         {
             lightingMap.SetCellPropertyObscuring((ushort)pos.X, (ushort)pos.Y, obscuring);

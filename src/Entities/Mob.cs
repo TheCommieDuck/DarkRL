@@ -12,11 +12,12 @@ namespace DarkRL.Entities
 
         public Stat HP { get; protected set; }
 
-        public void DropItem(Item i)
+        public Item DropItem(Item i)
         {
             Backpack.RemoveItem(i);
             i.Owner = null;
             level.AddEntityAtPos(Tile.PositionToID(this.Position), i);
+            return i;
         }
 
         public virtual void PickupItem(Item i)
