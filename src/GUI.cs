@@ -17,8 +17,8 @@ namespace DarkRL
 
         public GUI(Window win, TCODConsole main, Camera camera)
         {
-            statusWindow = new TCODConsole(win.StatusPanelWidth, win.Height);
-            eventLog = new TCODConsole(win.Width - win.StatusPanelWidth, win.MessagePanelHeight);
+            statusWindow = new TCODConsole(Window.StatusPanelWidth, win.Height);
+            eventLog = new TCODConsole(win.Width - Window.StatusPanelWidth, Window.MessagePanelHeight);
             statusWindow.setAlignment(TCODAlignment.CenterAlignment);
             statusWindow.setBackgroundColor(TCODColor.darkestRed.Multiply(0.1f));
             this.main = main;
@@ -73,7 +73,7 @@ namespace DarkRL
             {
                 statusWindow.putChar(statusWindow.getWidth() - 1, y, '|');
             }*/
-            TCODConsole.blit(eventLog, 0, 0, eventLog.getWidth(), eventLog.getHeight(), main, window.StatusPanelWidth, 0);
+            TCODConsole.blit(eventLog, 0, 0, eventLog.getWidth(), eventLog.getHeight(), main, Window.StatusPanelWidth, 0);
             TCODConsole.blit(statusWindow, 0, 0, statusWindow.getWidth(), statusWindow.getHeight(), main, 0, 0);
         }
 

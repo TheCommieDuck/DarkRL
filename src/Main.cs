@@ -86,7 +86,7 @@ namespace DarkRL
             messages = new List<string>();
 
 
-            camera = new Camera(0, 0, window.Width, window.Height-window.MessagePanelHeight);
+            camera = new Camera(0, 0, window.Width, window.Height - Window.MessagePanelHeight);
             camera.CentreOn(world.CurrentLevel.Player.Position);
             gui = new GUI(window, TCODConsole.root, camera);
             Player player = (Player)world.CurrentLevel.Player;
@@ -107,6 +107,13 @@ namespace DarkRL
         {
             messages.Add(p);
             main.Draw();
+        }
+
+        public static void AddOverlayConsole(TCODConsole src, int p1, int p2, int p3, int p4, TCODConsole dst, int p5, int p6)
+        {
+            main.Draw();
+            TCODConsole.blit(src, p1, p2, p3, p4, dst, p5, p6);
+            TCODConsole.flush();
         }
     }
 }

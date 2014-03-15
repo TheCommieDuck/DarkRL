@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using libtcod;
 
 namespace DarkRL.Entities
 {
@@ -173,8 +174,38 @@ namespace DarkRL.Entities
                 DarkRL.WriteMessage("There's nothing to pick up..");
                 return;
             }
-            else if(items.Count == 1)
+            else if (items.Count == 1)
                 base.PickupItem((Item)level.GetEntity(items[0]));
+            else //there's multiple items here
+            {
+                TCODConsole pickup = new TCODConsole(30, items.Count+1);
+                pickup.setBackgroundColor(TCODColor.black);
+                pickup.setForegroundColor(TCODColor.white);
+                char sym = 'a';
+                int y = 0;
+                //now display them all
+                foreach (Item i in items.Select(t => level.GetEntity(t)))
+                {
+
+                    pickup.print(0, y, sym.ToString() + ")" + i.ToString());
+                    ++y;
+                    ++sym;
+                }
+                DarkRL.WriteMessage("What do you want to pick up?");
+                DarkRL.AddOverlayConsole(pickup, 0, 0, pickup.getWidth(), pickup.getHeight(), TCODConsole.root, Window.StatusPanelWidth, 
+                    Window.MessagePanelHeight);
+                Key input = InputSystem.WaitForAndReturnInput();
+                char index = (char)(input.Character - 'a');
+                if (index >= items.Count|| index < 0)
+                {
+                    DarkRL.WriteMessage("Couldn't find anything..");
+                    return;
+                }
+                //so pick it up
+                base.PickupItem((Item)level.GetEntity(items[index]));
+                DarkRL.WriteMessage("You pick up the " + level.GetEntity(items[index]).Name);
+                return;
+            }
             DarkRL.WriteMessage("You pick up the " + level.GetEntity(items[0]).Name);
         }
 

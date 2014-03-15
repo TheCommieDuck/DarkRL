@@ -35,9 +35,9 @@ namespace DarkRL
             }
         }
 
-        public int StatusPanelWidth = 15;
+        public static int StatusPanelWidth = 15;
 
-        public int MessagePanelHeight = 5;
+        public static int MessagePanelHeight = 5;
 
         ~Window()
         {
